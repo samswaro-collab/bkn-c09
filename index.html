@@ -1,1788 +1,794 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parker Aerospace Sales Intelligence Dashboard</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #f5f7fa;
-            color: #1e293b;
-        }
-
-        .container {
-            display: grid;
-            grid-template-columns: 240px 1fr;
-            min-height: 100vh;
-        }
-
-        /* Sidebar Navigation */
-        .sidebar {
-            background: #0f172a;
-            color: white;
-            padding: 0;
-            position: sticky;
-            top: 0;
-            max-height: 100vh;
-            overflow-y: auto;
-            box-shadow: 2px 0 12px rgba(0,0,0,0.25);
-            width: 240px;
-        }
-
-        .sidebar::-webkit-scrollbar { width: 4px; }
-        .sidebar::-webkit-scrollbar-track { background: #0f172a; }
-        .sidebar::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
-
-        .sidebar-brand {
-            padding: 20px 16px 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.07);
-            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
-        }
-
-        .sidebar-brand-logo {
-            font-size: 20px;
-            margin-bottom: 6px;
-        }
-
-        .sidebar-brand-name {
-            font-size: 14px;
-            font-weight: 800;
-            color: #f1f5f9;
-            letter-spacing: 0.3px;
-        }
-
-        .sidebar-brand-sub {
-            font-size: 10px;
-            color: #64748b;
-            margin-top: 2px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-        }
-
-        .sidebar-badge {
-            display: inline-block;
-            background: #16a34a;
-            color: white;
-            font-size: 9px;
-            font-weight: 700;
-            padding: 1px 6px;
-            border-radius: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 6px;
-        }
-
-        .sidebar-group {
-            padding: 16px 0 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .sidebar-group-label {
-            padding: 0 16px 8px;
-            font-size: 10px;
-            text-transform: uppercase;
-            color: #475569;
-            font-weight: 700;
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .sidebar-group-label::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: rgba(255,255,255,0.06);
-        }
-
-        .sidebar-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 9px 16px;
-            color: #94a3b8;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.15s;
-            border-left: 3px solid transparent;
-            text-decoration: none;
-            line-height: 1.3;
-        }
-
-        .sidebar-item:hover {
-            background: rgba(255,255,255,0.04);
-            color: #e2e8f0;
-        }
-
-        .sidebar-item.active {
-            background: rgba(59,130,246,0.12);
-            color: #93c5fd;
-            border-left-color: #3b82f6;
-        }
-
-        .sidebar-dot {
-            width: 9px;
-            height: 9px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .sidebar-item-meta {
-            font-size: 10px;
-            color: #475569;
-            font-weight: 400;
-            margin-top: 1px;
-        }
-
-        .sidebar-item-text { flex: 1; }
-
-        .sidebar-count {
-            font-size: 10px;
-            background: rgba(255,255,255,0.07);
-            color: #64748b;
-            padding: 1px 6px;
-            border-radius: 8px;
-            flex-shrink: 0;
-        }
-
-        .sidebar-item.active .sidebar-count {
-            background: rgba(59,130,246,0.2);
-            color: #93c5fd;
-        }
-
-        /* Main Content */
-        .main {
-            overflow-y: auto;
-            background: #f5f7fa;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            color: white;
-            padding: 32px 40px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 4px;
-            font-weight: 700;
-        }
-
-        .header p {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
-        /* KPI Bar */
-        .kpi-bar {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 16px;
-            padding: 24px 40px;
-            background: white;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .kpi {
-            background: linear-gradient(135deg, #f0f4f8 0%, #e0e7ff 100%);
-            padding: 16px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .kpi-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 4px;
-        }
-
-        .kpi-label {
-            font-size: 12px;
-            color: #64748b;
-            text-transform: uppercase;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        /* Content Sections */
-        .content {
-            padding: 40px;
-        }
-
-        .section {
-            margin-bottom: 48px;
-        }
-
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 24px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        .section-color {
-            width: 4px;
-            height: 24px;
-            border-radius: 2px;
-        }
-
-        .section-title {
-            font-size: 20px;
-            font-weight: 700;
-            margin: 0;
-        }
-
-        .section-subtitle {
-            font-size: 12px;
-            color: #64748b;
-            margin-top: 4px;
-        }
-
-        /* Division Colors */
-        .color-core { background: #3b82f6; }
-        .color-exotic { background: #8b5cf6; }
-        .color-lord { background: #06b6d4; }
-        .color-meggitt { background: #ef4444; }
-        .color-curtis { background: #10b981; }
-
-        /* Grid Cards */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 32px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            border-top: 3px solid;
-            transition: all 0.2s;
-        }
-
-        .card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-            transform: translateY(-2px);
-        }
-
-        .card-title {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            color: #1e293b;
-        }
-
-        .card-detail {
-            font-size: 12px;
-            color: #64748b;
-            margin-bottom: 8px;
-        }
-
-        .tag {
-            display: inline-block;
-            background: #f1f5f9;
-            color: #475569;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            margin: 4px 4px 4px 0;
-        }
-
-        .tag-skill {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .tag-open {
-            background: #dffcf0;
-            color: #065f46;
-        }
-
-        /* Charts Container */
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 20px;
-            margin-bottom: 32px;
-        }
-
-        .chart-container {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-        }
-
-        .chart-title {
-            font-size: 14px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            color: #1e293b;
-        }
-
-        /* Table Styles */
-        .table-section {
-            background: white;
-            border-radius: 8px;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            margin-bottom: 24px;
-            overflow-x: auto;
-        }
-
-        .table-title {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            color: #1e293b;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-
-        th {
-            background: #f8fafc;
-            padding: 12px;
-            text-align: left;
-            font-weight: 700;
-            color: #475569;
-            border-bottom: 2px solid #e2e8f0;
-            text-transform: uppercase;
-            font-size: 11px;
-            letter-spacing: 0.5px;
-        }
-
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        tr:hover {
-            background: #f8fafc;
-        }
-
-        a.link {
-            color: #3b82f6;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        a.link:hover {
-            text-decoration: underline;
-        }
-
-        /* Hide content sections by default */
-        .section-content {
-            display: none;
-        }
-
-        .section-content.active {
-            display: block;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-
-            .sidebar {
-                position: relative;
-                max-height: none;
-            }
-
-            .content {
-                padding: 20px;
-            }
-
-            .grid {
-                grid-template-columns: 1fr;
-            }
-
-            .charts-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .kpi-bar {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .status-active {
-            background: #dffcf0;
-            color: #065f46;
-        }
-
-        .status-expanding {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .status-new {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parker Aerospace | BEAKON Sales Intelligence Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5;color:#333;overflow-x:hidden;}
+.topbar{background:#002b5c;color:white;padding:12px 20px;display:flex;align-items:center;gap:20px;border-bottom:3px solid #f47920;position:sticky;top:0;z-index:100;}
+.logo-pill{background:white;color:#002b5c;padding:6px 12px;border-radius:20px;font-weight:bold;font-size:13px;}
+.topbar-title{flex:1;font-size:18px;font-weight:600;}
+.pill{background:rgba(255,255,255,0.15);padding:5px 10px;border-radius:15px;font-size:12px;}
+.pill-status{background:#4caf50;padding:5px 10px;border-radius:15px;font-size:12px;}
+.refresh-banner{background:#0075be;color:white;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;font-size:13px;position:sticky;top:50px;z-index:99;}
+.container{display:flex;min-height:calc(100vh - 80px);}
+.sidebar{width:240px;background:#002b5c;color:white;padding:20px 0;overflow-y:auto;height:calc(100vh - 80px);position:sticky;top:80px;}
+.sidebar-label{font-size:11px;font-weight:700;text-transform:uppercase;color:#99b2cc;padding:0 15px;margin-bottom:8px;letter-spacing:0.5px;}
+.sidebar-section{margin-bottom:22px;}
+.sidebar-item{padding:10px 15px;cursor:pointer;font-size:13px;transition:all 0.2s;border-left:3px solid transparent;}
+.sidebar-item:hover{background:rgba(244,121,32,0.2);}
+.sidebar-item.active{background:rgba(244,121,32,0.3);border-left-color:#f47920;font-weight:600;}
+.main-content{flex:1;padding:30px;overflow-y:auto;height:calc(100vh - 80px);}
+.section{display:none;}
+.section.active{display:block;}
+.section-title{font-size:24px;font-weight:700;margin-bottom:25px;color:#002b5c;}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-bottom:25px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:25px;}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:25px;}
+.card{background:white;border-radius:8px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);border-top:3px solid #0075be;}
+.card-title{font-size:13px;font-weight:700;text-transform:uppercase;color:#666;margin-bottom:15px;letter-spacing:0.5px;}
+.kpi{font-size:32px;font-weight:700;color:#002b5c;margin-bottom:5px;}
+.kpi-label{font-size:12px;color:#999;}
+.kpi-change{font-size:12px;color:#4caf50;margin-top:5px;}
+.tag{display:inline-block;background:#f0f0f0;color:#333;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;margin-right:6px;margin-bottom:6px;}
+.tag-hot{background:#fdecea;color:#c62828;}
+.tag-blue{background:#e3f2fd;color:#1565c0;}
+.tag-orange{background:#fff3e0;color:#e65100;}
+.tag-india{background:#fef3c7;color:#92400e;}
+.tag-green{background:#e8f5e9;color:#1b5e20;}
+.contact-card{background:white;border-radius:6px;padding:15px;border-left:3px solid #0075be;margin-bottom:12px;font-size:12px;}
+.contact-name{font-weight:600;color:#002b5c;margin-bottom:2px;}
+.contact-title{color:#666;font-size:11px;margin-bottom:5px;}
+.contact-location{color:#999;font-size:10px;}
+.div-card{background:white;border-radius:8px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.1);border-left:4px solid #0075be;margin-bottom:14px;}
+.div-card.meggitt{border-left-color:#f47920;}
+.div-name{font-size:14px;font-weight:700;color:#002b5c;margin-bottom:4px;}
+.div-locations{font-size:11.5px;color:#555;line-height:1.6;margin-bottom:6px;}
+.div-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:4px;}
+.platform-card{background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.08);margin-bottom:20px;}
+.platform-header{padding:14px 18px;color:white;}
+.platform-products{padding:14px 18px;}
+.chain{display:flex;align-items:stretch;gap:0;margin-bottom:14px;border-radius:10px;overflow:hidden;}
+.chain-num{color:#fff;width:38px;min-width:38px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;}
+.chain-body{flex:1;display:flex;flex-wrap:wrap;}
+.chain-cell{flex:1;min-width:200px;padding:12px 15px;border-right:1px solid #e4eaf5;}
+.chain-cell:last-child{border-right:none;}
+.chain-label{font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:5px;}
+.chain-head{font-size:12.5px;font-weight:700;color:#1a1a2e;}
+.chain-body-text{font-size:11.5px;color:#5a6a8a;margin-top:4px;line-height:1.6;}
+.warn-blue{background:#e3f2fd;border:1px solid #1565c0;border-radius:8px;padding:12px 16px;margin-bottom:18px;font-size:12.5px;color:#0d47a1;}
+.warn-orange{background:#fff3e0;border:1px solid #f47920;border-radius:8px;padding:12px 16px;margin-bottom:18px;font-size:12.5px;color:#e65100;}
+.warn-green{background:#e8f5e9;border:1px solid #4caf50;border-radius:8px;padding:12px 16px;margin-bottom:18px;font-size:12.5px;color:#1b5e20;}
+::-webkit-scrollbar{width:8px;}::-webkit-scrollbar-track{background:#f1f1f1;}::-webkit-scrollbar-thumb{background:#0075be;border-radius:4px;}
+@media(max-width:1200px){.grid-4{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:900px){.grid-3{grid-template-columns:repeat(2,1fr);}.grid-2{grid-template-columns:1fr;}}
+</style>
 </head>
 <body>
-    <div class="container">
-        <!-- Sidebar -->
-        <div class="sidebar">
 
-            <!-- Brand Header -->
-            <div class="sidebar-brand">
-                <div class="sidebar-brand-logo">✈️</div>
-                <div class="sidebar-brand-name">Parker Aerospace</div>
-                <div class="sidebar-brand-sub">Sales Intelligence · 2026</div>
-                <div class="sidebar-badge">✓ Research Complete</div>
-            </div>
-
-            <!-- Parker Core -->
-            <div class="sidebar-group">
-                <div class="sidebar-group-label">Parker Core</div>
-                <a class="sidebar-item active" onclick="switchSection('core')">
-                    <div class="sidebar-dot" style="background:#3b82f6;"></div>
-                    <div class="sidebar-item-text">
-                        Core Divisions
-                        <div class="sidebar-item-meta">Flight Controls · Fluid · Hydraulic</div>
-                    </div>
-                    <span class="sidebar-count">63+</span>
-                </a>
-            </div>
-
-            <!-- Acquisitions -->
-            <div class="sidebar-group">
-                <div class="sidebar-group-label">Acquisitions</div>
-
-                <a class="sidebar-item" onclick="switchSection('exotic')">
-                    <div class="sidebar-dot" style="background:#8b5cf6;"></div>
-                    <div class="sidebar-item-text">
-                        Exotic Metals Forming
-                        <div class="sidebar-item-meta">2019 · $1.7B · Kent, WA</div>
-                    </div>
-                    <span class="sidebar-count">45+</span>
-                </a>
-
-                <a class="sidebar-item" onclick="switchSection('lord')">
-                    <div class="sidebar-dot" style="background:#06b6d4;"></div>
-                    <div class="sidebar-item-text">
-                        Lord Corporation
-                        <div class="sidebar-item-meta">2019 · $3.7B · Cary, NC</div>
-                    </div>
-                    <span class="sidebar-count">35+</span>
-                </a>
-
-                <a class="sidebar-item" onclick="switchSection('meggitt')">
-                    <div class="sidebar-dot" style="background:#ef4444;"></div>
-                    <div class="sidebar-item-text">
-                        Meggitt PLC
-                        <div class="sidebar-item-meta">2022 · $8.8B · 12 Divs / 43 Sites</div>
-                    </div>
-                    <span class="sidebar-count">164+</span>
-                </a>
-
-                <a class="sidebar-item" onclick="switchSection('curtis')">
-                    <div class="sidebar-dot" style="background:#10b981;"></div>
-                    <div class="sidebar-item-text">
-                        Curtis Instruments
-                        <div class="sidebar-item-meta">2025 · $1.0B · Mt. Kisco, NY</div>
-                    </div>
-                    <span class="sidebar-count">34+</span>
-                </a>
-            </div>
-
-            <!-- Sales Intelligence -->
-            <div class="sidebar-group">
-                <div class="sidebar-group-label">Sales Intelligence</div>
-
-                <a class="sidebar-item" onclick="switchSection('intel')">
-                    <div class="sidebar-dot" style="background:#f59e0b;"></div>
-                    <div class="sidebar-item-text">
-                        Hiring Intelligence
-                        <div class="sidebar-item-meta">Roles by division &amp; location</div>
-                    </div>
-                </a>
-
-                <a class="sidebar-item" onclick="switchSection('contacts')">
-                    <div class="sidebar-dot" style="background:#ec4899;"></div>
-                    <div class="sidebar-item-text">
-                        Key Contacts
-                        <div class="sidebar-item-meta">TA leads &amp; hiring managers</div>
-                    </div>
-                </a>
-
-                <a class="sidebar-item" onclick="switchSection('skills')">
-                    <div class="sidebar-dot" style="background:#22c55e;"></div>
-                    <div class="sidebar-item-text">
-                        Fast-Sell Skills
-                        <div class="sidebar-item-meta">High-demand certs &amp; roles</div>
-                    </div>
-                </a>
-            </div>
-
-            <!-- Footer -->
-            <div style="padding: 16px; margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.05);">
-                <div style="font-size: 10px; color: #334155; text-align: center; line-height: 1.6;">
-                    Total Acquisition Value<br>
-                    <span style="font-size: 16px; font-weight: 800; color: #475569;">$14.5B+</span><br>
-                    <span style="color: #334155;">across 4 companies</span>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Main Content -->
-        <div class="main">
-            <div class="header">
-                <h1>Parker Aerospace Intelligence Dashboard</h1>
-                <p>Comprehensive hiring and organizational intelligence for sales targeting</p>
-            </div>
-
-            <div class="kpi-bar">
-                <div class="kpi">
-                    <div class="kpi-value">295+</div>
-                    <div class="kpi-label">Est. Open Roles (All Divisions)</div>
-                </div>
-                <div class="kpi">
-                    <div class="kpi-value">16</div>
-                    <div class="kpi-label">Aerospace Divisions (Post-Meggitt)</div>
-                </div>
-                <div class="kpi">
-                    <div class="kpi-value">43</div>
-                    <div class="kpi-label">Meggitt Sites (12 Div)</div>
-                </div>
-                <div class="kpi">
-                    <div class="kpi-value">37</div>
-                    <div class="kpi-label">US Locations Mapped</div>
-                </div>
-                <div class="kpi">
-                    <div class="kpi-value">$24.5B</div>
-                    <div class="kpi-label">Total Acquisition Value</div>
-                </div>
-            </div>
-
-            <div class="content">
-
-                <!-- CORE PARKER AEROSPACE -->
-                <div id="core" class="section section-content active">
-                    <div class="section-header">
-                        <div class="section-color color-core"></div>
-                        <div>
-                            <h2 class="section-title">Parker Aerospace Core Operations</h2>
-                            <p class="section-subtitle">HQ: Cleveland, OH | ~5,800 employees across 44 facilities</p>
-                        </div>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">Key Divisions</h3>
-                    <div class="grid">
-                        <div class="card" style="border-top-color: #3b82f6;">
-                            <div class="card-title">Fluid Systems Division</div>
-                            <div class="card-detail"><strong>Focus:</strong> Fuel systems, hydraulic management</div>
-                            <div class="card-detail"><strong>Locations:</strong> Multiple US facilities</div>
-                            <div class="card-detail"><strong>Key Platforms:</strong> B787, A350, F-35, Regional jets</div>
-                            <div style="margin-top: 12px;">
-                                <span class="tag tag-skill">Manufacturing Engineers</span>
-                                <span class="tag tag-skill">Quality Engineers</span>
-                                <span class="tag tag-skill">Systems Engineers</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #3b82f6;">
-                            <div class="card-title">Control Systems Division</div>
-                            <div class="card-detail"><strong>Focus:</strong> Flight controls, actuation systems</div>
-                            <div class="card-detail"><strong>Locations:</strong> Irvine, CA (primary)</div>
-                            <div class="card-detail"><strong>Status:</strong> <span class="status-badge status-active">Active Hiring</span></div>
-                            <div style="margin-top: 12px;">
-                                <span class="tag tag-skill">Software Engineers</span>
-                                <span class="tag tag-skill">Systems Engineers</span>
-                                <span class="tag tag-skill">Test Engineers</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #3b82f6;">
-                            <div class="card-title">Motion Systems Division</div>
-                            <div class="card-detail"><strong>Focus:</strong> Shock, vibration, motion control</div>
-                            <div class="card-detail"><strong>Acquired via:</strong> Lord Corporation (2019)</div>
-                            <div class="card-detail"><strong>Employees:</strong> 3,000+</div>
-                            <div style="margin-top: 12px;">
-                                <span class="tag tag-skill">Materials Engineers</span>
-                                <span class="tag tag-skill">Process Engineers</span>
-                                <span class="tag tag-skill">Manufacturing Tech</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #3b82f6;">
-                            <div class="card-title">Air & Fuel Division</div>
-                            <div class="card-detail"><strong>Focus:</strong> Air management systems, filtration</div>
-                            <div class="card-detail"><strong>Location:</strong> Irvine, CA</div>
-                            <div class="card-detail"><strong>Key Program:</strong> Boeing 737 MAX</div>
-                            <div style="margin-top: 12px;">
-                                <span class="tag tag-skill">Design Engineers</span>
-                                <span class="tag tag-skill">Structural Analysis</span>
-                                <span class="tag tag-skill">Manufacturing</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">Primary Hiring Locations</h3>
-                    <div class="table-section">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Location</th>
-                                    <th>Division</th>
-                                    <th>Est. Open Roles</th>
-                                    <th>Key Positions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>Irvine, CA</strong></td>
-                                    <td>Control Systems, Air & Fuel</td>
-                                    <td><span class="tag tag-open">21+</span></td>
-                                    <td>Assemblers, Testers, Engineers</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Akron, OH</strong></td>
-                                    <td>Corporate HQ</td>
-                                    <td><span class="tag tag-open">7+</span></td>
-                                    <td>Supplier Recovery, HR, Management</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Mesa, AZ</strong></td>
-                                    <td>Manufacturing</td>
-                                    <td><span class="tag tag-open">15+</span></td>
-                                    <td>Machine Operators, Assemblers</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Ridley Park, PA</strong></td>
-                                    <td>Fluid Systems</td>
-                                    <td><span class="tag tag-open">12+</span></td>
-                                    <td>Manufacturing, Quality</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Huntsville, AL</strong></td>
-                                    <td>Defense Systems</td>
-                                    <td><span class="tag tag-open">8+</span></td>
-                                    <td>Engineers, Technicians</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- EXOTIC METALS -->
-                <div id="exotic" class="section section-content">
-                    <div class="section-header">
-                        <div class="section-color color-exotic"></div>
-                        <div>
-                            <h2 class="section-title">Exotic Metals Forming Division</h2>
-                            <p class="section-subtitle">Acquired Sept 2019 | $1.725B | 3 US Sites | ~1,600 employees</p>
-                        </div>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">All 3 US Locations</h3>
-                    <div class="grid">
-                        <div class="card" style="border-top-color: #8b5cf6;">
-                            <div class="card-title">📍 Kent, WA — Headquarters</div>
-                            <div class="card-detail"><strong>Role:</strong> HQ + Primary Manufacturing</div>
-                            <div class="card-detail"><strong>Focus:</strong> High-temp sheet metal forming, titanium fabrication</div>
-                            <div class="card-detail"><strong>Est. Open:</strong> <span class="status-badge status-active">25+ roles</span></div>
-                            <div style="margin-top: 10px;">
-                                <span class="tag tag-skill">TIG Welding (Ti)</span>
-                                <span class="tag tag-skill">Sheet Metal</span>
-                                <span class="tag tag-skill">Mfg Supervisors</span>
-                                <span class="tag tag-skill">NDT Inspection</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #8b5cf6;">
-                            <div class="card-title">📍 Airway Heights, WA — Manufacturing</div>
-                            <div class="card-detail"><strong>Address:</strong> 12821 W McFarlane Rd, Airway Heights, WA 99001</div>
-                            <div class="card-detail"><strong>Note:</strong> Near Spokane — second Washington state plant</div>
-                            <div class="card-detail"><strong>Est. Open:</strong> <span class="status-badge status-active">12+ roles</span></div>
-                            <div style="margin-top: 10px;">
-                                <span class="tag tag-skill">Welders</span>
-                                <span class="tag tag-skill">NDT Technicians</span>
-                                <span class="tag tag-skill">Fabricators</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #8b5cf6;">
-                            <div class="card-title">📍 Phoenix, AZ — Manufacturing</div>
-                            <div class="card-detail"><strong>Address:</strong> 1601 E Broadway Rd, Phoenix, AZ 85040</div>
-                            <div class="card-detail"><strong>Focus:</strong> Exhaust management components, high-temp alloys</div>
-                            <div class="card-detail"><strong>Est. Open:</strong> <span class="status-badge status-active">8+ roles</span></div>
-                            <div style="margin-top: 10px;">
-                                <span class="tag tag-skill">Chromoly Welding</span>
-                                <span class="tag tag-skill">Fabricators</span>
-                                <span class="tag tag-skill">Quality Engineers</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #8b5cf6;">
-                            <div class="card-title">Key Platforms &amp; Products</div>
-                            <div class="card-detail"><strong>Commercial:</strong> Boeing 777, 787, Airbus A320, A350</div>
-                            <div class="card-detail"><strong>Defense:</strong> Military aircraft, drone systems</div>
-                            <div class="card-detail"><strong>Engine OEMs:</strong> CFM, Rolls-Royce</div>
-                            <div class="card-detail"><strong>Hiring Highlight:</strong> Job fair held April 6, 2026 · Full benefits + bonuses</div>
-                        </div>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">Open Roles by Location</h3>
-                    <div class="table-section">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Role</th>
-                                    <th>Location</th>
-                                    <th>Experience Required</th>
-                                    <th>Pay Range</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>TIG Welder (Titanium/Chromoly)</strong></td>
-                                    <td>Kent, WA · Airway Heights, WA</td>
-                                    <td>2+ yrs exotic metals welding</td>
-                                    <td>$55–$75/hr</td>
-                                    <td><span class="status-badge status-active">Hiring</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Sheet Metal Fabricator</strong></td>
-                                    <td>Kent, WA · Phoenix, AZ</td>
-                                    <td>3+ yrs aerospace fabrication</td>
-                                    <td>$48–$70/hr</td>
-                                    <td><span class="status-badge status-active">Hiring</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Manufacturing Supervisor</strong></td>
-                                    <td>Kent, WA</td>
-                                    <td>5+ yrs, team leadership</td>
-                                    <td>$65–$97/hr</td>
-                                    <td><span class="status-badge status-active">Hiring</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>NDT Technician I / II</strong></td>
-                                    <td>Airway Heights, WA</td>
-                                    <td>NDT Level II cert preferred</td>
-                                    <td>$35–$55/hr</td>
-                                    <td><span class="status-badge status-active">Hiring</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Quality Inspector</strong></td>
-                                    <td>Kent, WA · Phoenix, AZ</td>
-                                    <td>AS9100 familiarity preferred</td>
-                                    <td>$45–$65/hr</td>
-                                    <td><span class="status-badge status-active">Hiring</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Mechanics / Assemblers</strong></td>
-                                    <td>All 3 sites</td>
-                                    <td>Aerospace assembly experience</td>
-                                    <td>$22–$40/hr</td>
-                                    <td><span class="status-badge status-expanding">Growing</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- LORD CORPORATION -->
-                <div id="lord" class="section section-content">
-                    <div class="section-header">
-                        <div class="section-color color-lord"></div>
-                        <div>
-                            <h2 class="section-title">Lord Corporation (Parker LORD Division)</h2>
-                            <p class="section-subtitle">Acquired Oct 2019 | $3.675B | Cary, NC HQ | 3,000+ employees | 19 facilities · 10 R&D centers · 26 countries</p>
-                        </div>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">US Locations</h3>
-                    <div class="grid">
-                        <div class="card" style="border-top-color: #06b6d4;">
-                            <div class="card-title">📍 Cary, NC — World Headquarters</div>
-                            <div class="card-detail"><strong>Role:</strong> Corporate HQ, R&D, Engineering leadership</div>
-                            <div class="card-detail"><strong>Focus:</strong> NVH materials, advanced adhesives, innovation centre</div>
-                            <div class="card-detail"><strong>Est. Open:</strong> <span class="status-badge status-active">8+ roles</span></div>
-                            <div style="margin-top: 10px;">
-                                <span class="tag tag-skill">Materials Scientists</span>
-                                <span class="tag tag-skill">R&D Engineers</span>
-                                <span class="tag tag-skill">Program Managers</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #06b6d4;">
-                            <div class="card-title">📍 Erie, PA — Flagship Manufacturing</div>
-                            <div class="card-detail"><strong>Role:</strong> Primary US manufacturing hub (original LORD plant)</div>
-                            <div class="card-detail"><strong>Focus:</strong> Damping products, elastomeric mounts, coatings</div>
-                            <div class="card-detail"><strong>Est. Open:</strong> <span class="status-badge status-active">10+ roles</span></div>
-                            <div style="margin-top: 10px;">
-                                <span class="tag tag-skill">Process Engineers</span>
-                                <span class="tag tag-skill">Manufacturing Tech</span>
-                                <span class="tag tag-skill">Quality Engineers</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #06b6d4;">
-                            <div class="card-title">📍 Cambridge Springs, PA &amp; Saegertown, PA</div>
-                            <div class="card-detail"><strong>Role:</strong> Secondary manufacturing near Erie cluster</div>
-                            <div class="card-detail"><strong>Address (Saegertown):</strong> 601 South St, Saegertown, PA</div>
-                            <div class="card-detail"><strong>Est. Open:</strong> <span class="status-badge status-active">8+ roles</span></div>
-                            <div style="margin-top: 10px;">
-                                <span class="tag tag-skill">Fabricators</span>
-                                <span class="tag tag-skill">Assembly Operators</span>
-                                <span class="tag tag-skill">Maintenance Tech</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #06b6d4;">
-                            <div class="card-title">Global Footprint &amp; Platforms</div>
-                            <div class="card-detail"><strong>Total Facilities:</strong> 19 manufacturing plants</div>
-                            <div class="card-detail"><strong>R&D Centers:</strong> 10 globally</div>
-                            <div class="card-detail"><strong>Commercial:</strong> All major aircraft platforms</div>
-                            <div class="card-detail"><strong>Defense:</strong> Military transports, fighters, rotorcraft</div>
-                            <div class="card-detail"><strong>Specialty:</strong> NVH solutions, 90+ years engineering heritage</div>
-                        </div>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">Hiring Demand by Discipline</h3>
-                    <div class="table-section">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Discipline</th>
-                                    <th>Primary Location</th>
-                                    <th>Key Focus Areas</th>
-                                    <th>Est. Open</th>
-                                    <th>Priority</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>Materials Engineering</strong></td>
-                                    <td>Cary, NC</td>
-                                    <td>Polymer chemistry, composite materials, adhesives formulation</td>
-                                    <td>8+</td>
-                                    <td><span class="status-badge status-active">High</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Process Engineering</strong></td>
-                                    <td>Erie, PA · Cambridge Springs, PA</td>
-                                    <td>Manufacturing optimization, Six Sigma, lean production</td>
-                                    <td>10+</td>
-                                    <td><span class="status-badge status-active">High</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Quality &amp; Testing</strong></td>
-                                    <td>Erie, PA · Saegertown, PA</td>
-                                    <td>Material testing, vibration analysis, AS9100 certification</td>
-                                    <td>12+</td>
-                                    <td><span class="status-badge status-active">High</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Manufacturing Support</strong></td>
-                                    <td>All PA sites</td>
-                                    <td>Production technicians, assemblers, maintenance</td>
-                                    <td>5+</td>
-                                    <td><span class="status-badge status-expanding">Growing</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- MEGGITT -->
-                <div id="meggitt" class="section section-content">
-                    <div class="section-header">
-                        <div class="section-color color-meggitt"></div>
-                        <div>
-                            <h2 class="section-title">Meggitt PLC - Parker Integration</h2>
-                            <p class="section-subtitle">Acquired Sept 2022 | £6.3B ($8.8B) | 9,000+ employees | 12 Aerospace Divisions / 43 Sites</p>
-                        </div>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">Complete Division Structure: Parker Aerospace Group (12 Divisions / 43 Sites)</h3>
-                    <div style="background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px; font-size: 13px; color: #1e40af;">
-                        🌎 <strong>Global View:</strong> All sites listed per the Parker Meggitt slide. <span style="background:#dbeafe; border-radius:3px; padding:2px 6px; font-weight:700; color:#1e40af;">US locations highlighted in blue</span> — international sites shown for full account intelligence.
-                    </div>
-                    <div class="table-section" style="overflow-x:auto;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Division</th>
-                                    <th>US Locations</th>
-                                    <th>International Locations</th>
-                                    <th>Est. Open</th>
-                                    <th>Top Skills</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>Braking Systems</strong> <span style="font-size:10px;background:#eff6ff;color:#1d4ed8;border-radius:3px;padding:1px 5px;">★ Meggitt</span></td>
-                                    <td><span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Akron, OH</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Danville, KY</span></td>
-                                    <td style="color:#64748b;font-size:12px;">Querétaro, Mexico &nbsp;|&nbsp; Coventry, UK &nbsp;|&nbsp; Ansty Park, UK</td>
-                                    <td><span class="tag tag-open">18+</span></td>
-                                    <td style="font-size:12px;">Braking design, Structural analysis, Mfg engineering</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Military Flight Controls</strong></td>
-                                    <td><span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Irvine, CA</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Dublin, GA</span></td>
-                                    <td style="color:#94a3b8;font-size:12px;">—</td>
-                                    <td><span class="tag tag-open">12+</span></td>
-                                    <td style="font-size:12px;">Systems integration, Avionics, SW/FW engineering</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Commercial Flight Controls</strong></td>
-                                    <td><span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Ogden, UT</span></td>
-                                    <td style="color:#94a3b8;font-size:12px;">—</td>
-                                    <td><span class="tag tag-open">8+</span></td>
-                                    <td style="font-size:12px;">Control systems, Aircraft integration, Software</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Hydraulic Systems</strong></td>
-                                    <td><span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Kalamazoo, MI</span></td>
-                                    <td style="color:#94a3b8;font-size:12px;">—</td>
-                                    <td><span class="tag tag-open">10+</span></td>
-                                    <td style="font-size:12px;">Hydraulic design, Component mfg, Testing</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Fluid Systems</strong></td>
-                                    <td><span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Irvine, CA</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Elyria, OH</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Hauppauge, NY</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">N. Hollywood, CA</span></td>
-                                    <td style="color:#64748b;font-size:12px;">Guaymas, Mexico</td>
-                                    <td><span class="tag tag-open">28+</span></td>
-                                    <td style="font-size:12px;">Hydraulic engineering, Fluid control, CATIA, Machining</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Fire, Safety & Power Systems</strong> <span style="font-size:10px;background:#eff6ff;color:#1d4ed8;border-radius:3px;padding:1px 5px;">★ Meggitt</span></td>
-                                    <td><span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Simi Valley, CA</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Portland, OR</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Tucson, AZ</span></td>
-                                    <td style="color:#94a3b8;font-size:12px;">—</td>
-                                    <td><span class="tag tag-open">42+</span></td>
-                                    <td style="font-size:12px;">Fire detection, Safety systems, Mfg, QA</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Gas Turbine Fuel Systems</strong></td>
-                                    <td><span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Mentor, OH</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Glendale, AZ</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Naples, FL</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Devens, MA</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Mt. Holly, SC</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Troy, IN</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">San Diego, CA</span></td>
-                                    <td style="color:#64748b;font-size:12px;">Ansty Park, UK *(locally managed)</span> &nbsp;|&nbsp; KL, Malaysia</td>
-                                    <td><span class="tag tag-open">24+</span></td>
-                                    <td style="font-size:12px;">Engine fuel systems, Aerospace welding, Pressure components</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Defense Systems</strong> <span style="font-size:10px;background:#eff6ff;color:#1d4ed8;border-radius:3px;padding:1px 5px;">★ Meggitt</span></td>
-                                    <td><span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Irvine, CA (Defense)</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Irvine, CA (MOC)</span></td>
-                                    <td style="color:#94a3b8;font-size:12px;">—</td>
-                                    <td><span class="tag tag-open">8+</span></td>
-                                    <td style="font-size:12px;">Defense systems, Program support, Integration</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Motion, Power & Sensing</strong> <span style="font-size:10px;background:#eff6ff;color:#1d4ed8;border-radius:3px;padding:1px 5px;">★ Meggitt</span></td>
-                                    <td style="color:#94a3b8;font-size:12px;">No US locations</td>
-                                    <td style="color:#64748b;font-size:12px;">Avrille, France &nbsp;|&nbsp; Archamps, France &nbsp;|&nbsp; Fribourg, Switzerland &nbsp;|&nbsp; Fareham, UK &nbsp;|&nbsp; Dong Nai, Vietnam &nbsp;|&nbsp; Wiesbaden, Germany</td>
-                                    <td><span class="tag" style="background:#f1f5f9;color:#64748b;">Intl</span></td>
-                                    <td style="font-size:12px;">Vibration/motion sensing, Actuation, Structural dynamics</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Exotic Metals Forming</strong></td>
-                                    <td><span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Kent, WA</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Airway Heights, WA</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Phoenix, AZ</span></td>
-                                    <td style="color:#94a3b8;font-size:12px;">—</td>
-                                    <td><span class="tag tag-open">45+</span></td>
-                                    <td style="font-size:12px;">TIG welding (Ti/Chromoly), Sheet metal fab, NDT, Supervisors</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Stratoflex Products</strong></td>
-                                    <td><span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Ft. Worth, TX</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Camarillo, CA</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Jacksonville, FL</span></td>
-                                    <td style="color:#64748b;font-size:12px;">Monterrey, Mexico</td>
-                                    <td><span class="tag tag-open">12+</span></td>
-                                    <td style="font-size:12px;">Flexible assemblies, Thermal systems, Quality inspection</td>
-                                </tr>
-                                <tr style="background:#f0fdf4;">
-                                    <td><strong>Services & Support / CSO</strong> <span style="font-size:10px;background:#eff6ff;color:#1d4ed8;border-radius:3px;padding:1px 5px;">★ Meggitt</span></td>
-                                    <td><span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Miami, FL</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Gardena, CA</span> &nbsp; <span style="background:#dbeafe;border-radius:3px;padding:2px 6px;font-size:12px;color:#1e40af;">Irvine, CA</span></td>
-                                    <td style="color:#64748b;font-size:12px;">Singapore &nbsp;|&nbsp; Ansty Park, UK</td>
-                                    <td><span class="tag tag-open">6+</span></td>
-                                    <td style="font-size:12px;">Field service engineers, MRO, Technical support, Customer ops</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div style="padding: 12px 0 4px; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0; margin-top: 8px;">
-                            <span style="background:#dbeafe;border-radius:3px;padding:1px 6px;color:#1e40af;font-weight:600;">Blue badges</span> = US locations &nbsp;|&nbsp;
-                            ★ Meggitt = Meggitt-origin division (new to Parker post-2022 acquisition) &nbsp;|&nbsp;
-                            * Gas Turbine Fuel Systems Ansty Park site is locally managed by Ansty Park Ops per Parker slide
-                        </div>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">Geographic Concentration — All Sites</h3>
-                    <div class="grid">
-                        <div class="card" style="border-top-color: #ef4444;">
-                            <div class="card-title">🇺🇸 California Hub <span style="font-size:11px;font-weight:400;color:#64748b;">(largest US cluster)</span></div>
-                            <div class="card-detail"><strong>US:</strong> Simi Valley · Irvine (Flight Controls, Defense, Fluid, CSO) · N. Hollywood · Camarillo · Gardena · San Diego</div>
-                            <div class="card-detail"><strong>Est. Open:</strong> 100+</div>
-                            <div class="card-detail"><strong>Key Divisions:</strong> Fire/Safety (42+), Fluid Systems (28+), Military/Commercial Flight Controls, Defense, CSO</div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #ef4444;">
-                            <div class="card-title">🇺🇸 Pacific Northwest &amp; Southwest</div>
-                            <div class="card-detail"><strong>US:</strong> Kent WA · Spokane WA · Phoenix AZ · Tucson AZ · Portland OR</div>
-                            <div class="card-detail"><strong>Est. Open:</strong> 50+</div>
-                            <div class="card-detail"><strong>Key Divisions:</strong> Exotic Metals Forming (45+ roles), Fire &amp; Safety Power (Portland/Tucson)</div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #ef4444;">
-                            <div class="card-title">🇺🇸 Midwest &amp; Great Lakes</div>
-                            <div class="card-detail"><strong>US:</strong> Akron OH · Danville KY · Kalamazoo MI · Mentor OH · Elyria OH · Troy IN · Glendale AZ · Ogden UT</div>
-                            <div class="card-detail"><strong>Est. Open:</strong> 55+</div>
-                            <div class="card-detail"><strong>Key Divisions:</strong> Braking Systems (Akron/Danville), Hydraulic Systems (Kalamazoo), Gas Turbine Fuel (Mentor/Troy)</div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #ef4444;">
-                            <div class="card-title">🇺🇸 South, Southeast &amp; Atlantic</div>
-                            <div class="card-detail"><strong>US:</strong> Ft. Worth TX · Jacksonville FL · Naples FL · Miami FL · Devens MA · Hauppauge NY · Mt. Holly SC · Dublin GA</div>
-                            <div class="card-detail"><strong>Est. Open:</strong> 40+</div>
-                            <div class="card-detail"><strong>Key Divisions:</strong> Stratoflex (Ft. Worth/Jacksonville), Gas Turbine Fuel (Naples/Devens/Mt. Holly), Fluid Systems (Hauppauge), CSO (Miami)</div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #94a3b8;">
-                            <div class="card-title">🌍 International Sites (Account Intel)</div>
-                            <div class="card-detail"><strong>UK:</strong> Ansty Park (Braking, Gas Turbine*, CSO) · Coventry (Braking) · Fareham (Motion/Power/Sensing)</div>
-                            <div class="card-detail"><strong>Europe:</strong> Avrille &amp; Archamps France · Fribourg Switzerland · Wiesbaden Germany (all Motion/Power/Sensing)</div>
-                            <div class="card-detail"><strong>Asia/APAC:</strong> KL Malaysia (Gas Turbine) · Dong Nai Vietnam (Motion/Sensing) · Singapore (CSO)</div>
-                            <div class="card-detail"><strong>Mexico:</strong> Querétaro (Braking) · Guaymas (Fluid) · Monterrey (Stratoflex)</div>
-                            <div style="margin-top: 8px; font-size: 11px; color: #64748b;">For full account coverage — not primary Cyient staffing targets</div>
-                        </div>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">Engineered Materials Group (Also from Meggitt)</h3>
-                    <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 16px; border-radius: 4px; margin-bottom: 24px;">
-                        <div style="font-size: 13px; color: #991b1b; font-weight: 600;">
-                            Meggitt also added 3 divisions to Parker's Engineered Materials Group (focusing on materials, sealing, composites, noise/vibration control) plus 1 division to Filtration Group (Heatric - Energy/Oil & Gas). Total impact: 16 new divisions across Parker operating groups.
-                        </div>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">Top Skills in Demand (Meggitt Divisions)</h3>
-                    <div class="grid">
-                        <div class="card" style="border-top-color: #ef4444;">
-                            <div class="card-title">Fire & Safety Systems</div>
-                            <div class="card-detail"><strong>Est. 42+ Open</strong> - Simi Valley (largest)</div>
-                            <div style="margin-top: 8px;">
-                                <span class="tag tag-skill">Fire Detection Design</span>
-                                <span class="tag tag-skill">Safety Systems Engineering</span>
-                                <span class="tag tag-skill">Manufacturing</span>
-                                <span class="tag tag-skill">Quality Testing</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #ef4444;">
-                            <div class="card-title">Fluid Systems</div>
-                            <div class="card-detail"><strong>Est. 28+ Open</strong> - Multiple locations</div>
-                            <div style="margin-top: 8px;">
-                                <span class="tag tag-skill">Hydraulic Engineering</span>
-                                <span class="tag tag-skill">Fluid Control Systems</span>
-                                <span class="tag tag-skill">Precision Machining</span>
-                                <span class="tag tag-skill">CAD Design (CATIA)</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #ef4444;">
-                            <div class="card-title">Gas Turbine Fuel Systems</div>
-                            <div class="card-detail"><strong>Est. 24+ Open</strong> - Multi-location</div>
-                            <div style="margin-top: 8px;">
-                                <span class="tag tag-skill">Engine Systems</span>
-                                <span class="tag tag-skill">Fuel System Design</span>
-                                <span class="tag tag-skill">Aerospace Welding</span>
-                                <span class="tag tag-skill">Pressure Components</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #ef4444;">
-                            <div class="card-title">Flight Controls</div>
-                            <div class="card-detail"><strong>Est. 20+ Open</strong> - Irvine, Ogden, Dublin</div>
-                            <div style="margin-top: 8px;">
-                                <span class="tag tag-skill">Control Systems</span>
-                                <span class="tag tag-skill">Avionics Integration</span>
-                                <span class="tag tag-skill">Software Engineering</span>
-                                <span class="tag tag-skill">Systems Testing</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CURTIS INSTRUMENTS -->
-                <div id="curtis" class="section section-content">
-                    <div class="section-header">
-                        <div class="section-color color-curtis"></div>
-                        <div>
-                            <h2 class="section-title">Curtis Instruments (Parker Motion Systems Group)</h2>
-                            <p class="section-subtitle">Acquired Sept 2025 | $1.0B | Est. Revenue $320M | Founded 1960 · 65+ years EV tech heritage</p>
-                        </div>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">Site Locations</h3>
-                    <div class="grid">
-                        <div class="card" style="border-top-color: #10b981;">
-                            <div class="card-title">📍 Mount Kisco, NY — World HQ &amp; Engineering</div>
-                            <div class="card-detail"><strong>Role:</strong> Global headquarters + Eugene P. Finger Technical Center (R&D)</div>
-                            <div class="card-detail"><strong>Focus:</strong> Motor control design, battery management systems, power electronics, EV instrumentation</div>
-                            <div class="card-detail"><strong>Est. Open:</strong> <span class="status-badge status-active">20+ US roles</span></div>
-                            <div style="margin-top: 10px;">
-                                <span class="tag tag-skill">Embedded SW Engineers</span>
-                                <span class="tag tag-skill">PCB / HW Design</span>
-                                <span class="tag tag-skill">Power Electronics</span>
-                                <span class="tag tag-skill">Battery Systems</span>
-                                <span class="tag tag-skill">Validation Engineers</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #10b981;">
-                            <div class="card-title">🌍 International Manufacturing Sites</div>
-                            <div class="card-detail"><strong>Bulgaria:</strong> Primary manufacturing operations</div>
-                            <div class="card-detail"><strong>UK:</strong> Inventory &amp; operations planning</div>
-                            <div class="card-detail"><strong>Germany:</strong> Warehousing &amp; logistics</div>
-                            <div class="card-detail" style="margin-top: 8px; font-size: 11px; color:#64748b;">Note: Core US engineering and R&D is concentrated in Mount Kisco, NY — primary Cyient staffing target</div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #10b981;">
-                            <div class="card-title">Strategic Fit for Parker</div>
-                            <div class="card-detail"><strong>Integrated into:</strong> Parker Motion Systems Group</div>
-                            <div class="card-detail"><strong>Why acquired:</strong> Expand EV/hybrid motor control capabilities</div>
-                            <div class="card-detail"><strong>Products:</strong> Motor speed controllers, battery monitors, power converters, vehicle displays</div>
-                            <div class="card-detail"><strong>Markets:</strong> Forklifts, golf cars, wheelchairs, off-road EVs, aerospace electrification</div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #10b981;">
-                            <div class="card-title">Opportunity Signal</div>
-                            <div class="card-detail"><strong>Status:</strong> <span class="status-badge status-new">Recently Acquired (Sept 2025)</span></div>
-                            <div class="card-detail"><strong>Integration Phase:</strong> Active — early 2026</div>
-                            <div class="card-detail"><strong>Hiring Forecast:</strong> High velocity expected as Parker integrates and scales EV platform</div>
-                            <div class="card-detail"><strong>Watch for:</strong> New engineering roles as Parker cross-sells Curtis tech into aerospace electrification programs</div>
-                        </div>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">Mount Kisco, NY — Open Roles by Department</h3>
-                    <div class="table-section">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Department</th>
-                                    <th>Focus Area</th>
-                                    <th>Est. Roles</th>
-                                    <th>Key Skills</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>Product / Hardware Engineering</strong></td>
-                                    <td>Motor control design, power electronics, PCB design</td>
-                                    <td>8+</td>
-                                    <td>EE, Altium/Cadence, power electronics, FPGA</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Embedded Software Engineering</strong></td>
-                                    <td>Firmware, real-time OS, EV control algorithms</td>
-                                    <td>8+</td>
-                                    <td>C/C++, RTOS, CAN bus, AUTOSAR</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>R&D / Technical Center</strong></td>
-                                    <td>Next-gen battery monitors, EV tech, validation</td>
-                                    <td>6+</td>
-                                    <td>Senior engineers, researchers, test/validation</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Supply Chain &amp; Operations</strong></td>
-                                    <td>Procurement, vendor management, integration planning</td>
-                                    <td>4+</td>
-                                    <td>Supply chain engineers, planners, ERP (SAP)</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 16px; border-radius: 4px; margin-top: 20px;">
-                        <div style="font-size: 14px; font-weight: 700; color: #065f46; margin-bottom: 8px;">💡 Cyient Sales Angle</div>
-                        <div style="font-size: 13px; color: #1b7245;">
-                            Curtis was acquired just 7 months ago. Parker is actively integrating EV controls into its aerospace electrification roadmap. This creates an early-mover opportunity for Cyient to position embedded SW and hardware engineers before the division fully ramps. Target: Engineering leadership at Mount Kisco and Parker Motion Systems Group VP level.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- HIRING INTELLIGENCE -->
-                <div id="intel" class="section section-content">
-                    <div class="section-header">
-                        <div class="section-color" style="background: #64748b;"></div>
-                        <div>
-                            <h2 class="section-title">Consolidated Hiring Intelligence</h2>
-                            <p class="section-subtitle">Cross-divisional analysis of 295+ open positions | Parker Aerospace (12 Divs) + Acquisitions</p>
-                        </div>
-                    </div>
-
-                    <div class="charts-grid">
-                        <div class="chart-container">
-                            <div class="chart-title">Open Roles by Meggitt Division (Top 8)</div>
-                            <canvas id="divisionChart"></canvas>
-                        </div>
-
-                        <div class="chart-container">
-                            <div class="chart-title">Geographic Distribution - US Locations</div>
-                            <canvas id="locationChart"></canvas>
-                        </div>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">Top 12 Priority Hiring Areas (Meggitt Aerospace Group)</h3>
-                    <div class="table-section">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Division</th>
-                                    <th>Primary Locations</th>
-                                    <th>Est. Open</th>
-                                    <th>Top Skills</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>Fire, Safety & Power Systems</strong></td>
-                                    <td>Simi Valley, Portland, Tucson</td>
-                                    <td><span class="status-badge status-active">42+</span></td>
-                                    <td>Fire detection design, Safety systems, Manufacturing</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Gas Turbine Fuel Systems</strong></td>
-                                    <td>Mentor OH, Glendale AZ, Naples FL, Troy IN, San Diego, +more</td>
-                                    <td><span class="status-badge status-active">24+</span></td>
-                                    <td>Engine systems, Fuel design, Aerospace welding</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Fluid Systems Division</strong></td>
-                                    <td>Irvine, Elyria, Hauppauge, N. Hollywood</td>
-                                    <td><span class="status-badge status-active">28+</span></td>
-                                    <td>Hydraulic engineering, Fluid control, Precision machining</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Exotic Metals Forming</strong></td>
-                                    <td>Kent WA, Spokane WA, Phoenix AZ</td>
-                                    <td><span class="status-badge status-active">45+</span></td>
-                                    <td>TIG welding, Exotic metals, Fabrication, Supervisors</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Braking Systems Division</strong></td>
-                                    <td>Akron OH, Danville KY</td>
-                                    <td><span class="status-badge status-active">18+</span></td>
-                                    <td>Braking systems design, Manufacturing engineering, Testing</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Military Flight Controls Division</strong></td>
-                                    <td>Irvine CA, Dublin GA</td>
-                                    <td><span class="status-badge status-active">12+</span></td>
-                                    <td>Systems integration, Avionics, Software/firmware testing</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Stratoflex Products Division</strong></td>
-                                    <td>Ft. Worth TX, Camarillo CA, Jacksonville FL</td>
-                                    <td><span class="status-badge status-expanding">12+</span></td>
-                                    <td>Flexible hose design, Thermal systems, Quality inspection</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Motion, Power & Sensing</strong></td>
-                                    <td>Multiple (global focus)</td>
-                                    <td><span class="status-badge status-expanding">15+</span></td>
-                                    <td>Materials engineering, Vibration control, Sensors</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Commercial Flight Controls</strong></td>
-                                    <td>Ogden UT</td>
-                                    <td><span class="status-badge status-expanding">8+</span></td>
-                                    <td>Control systems, Aircraft integration, Software</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Hydraulic Systems Division</strong></td>
-                                    <td>Kalamazoo MI</td>
-                                    <td><span class="status-badge status-expanding">10+</span></td>
-                                    <td>Hydraulic design, Component manufacturing, Testing</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Defense Systems Division</strong></td>
-                                    <td>Irvine CA (MOC)</td>
-                                    <td><span class="status-badge status-expanding">8+</span></td>
-                                    <td>Defense systems, Security clearance roles, Integration</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Customer Support Operations (CSO)</strong></td>
-                                    <td>Miami FL, Gardena CA, Irvine CA</td>
-                                    <td><span class="status-badge status-expanding">6+</span></td>
-                                    <td>Field support, Maintenance, Customer technical support</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">Regional Hiring Concentration</h3>
-                    <div class="grid">
-                        <div class="card" style="border-top-color: #64748b;">
-                            <div class="card-title">🔴 California Hub (Largest)</div>
-                            <div class="card-detail"><strong>Locations:</strong> Simi Valley, Irvine, N. Hollywood, Camarillo, Gardena, San Diego</div>
-                            <div class="card-detail"><strong>Est. Open:</strong> 100+</div>
-                            <div class="card-detail"><strong>Key Divisions:</strong> Fire/Safety (42+), Fluid Systems (28+), Flight Controls, Defense</div>
-                            <div style="margin-top: 8px; font-size: 11px;">Largest hiring concentration | Fire & safety, hydraulics focus</div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #64748b;">
-                            <div class="card-title">🟢 Midwest Hub</div>
-                            <div class="card-detail"><strong>Locations:</strong> Akron OH, Mentor OH, Glendale AZ, Troy IN, Kalamazoo MI, Mt. Holly SC</div>
-                            <div class="card-detail"><strong>Est. Open:</strong> 72+</div>
-                            <div class="card-detail"><strong>Key Divisions:</strong> Gas Turbine Fuel (24+), Braking (18+), Hydraulic, Fuel Systems</div>
-                            <div style="margin-top: 8px; font-size: 11px;">Engine systems | Fuel & braking focus</div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #64748b;">
-                            <div class="card-title">🟡 Pacific Northwest</div>
-                            <div class="card-detail"><strong>Locations:</strong> Kent WA, Spokane WA, Phoenix AZ</div>
-                            <div class="card-detail"><strong>Est. Open:</strong> 45+</div>
-                            <div class="card-detail"><strong>Key Division:</strong> Exotic Metals Forming (welding, fabrication)</div>
-                            <div style="margin-top: 8px; font-size: 11px;">Manufacturing & exotic metals | Specialty welding</div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #64748b;">
-                            <div class="card-title">🔵 Other US Regions</div>
-                            <div class="card-detail"><strong>Locations:</strong> Ft. Worth TX, Jacksonville FL, Miami FL, Elyria OH, Hauppauge NY, Ogden UT, Dublin GA</div>
-                            <div class="card-detail"><strong>Est. Open:</strong> 35+</div>
-                            <div class="card-detail"><strong>Distributed Operations:</strong> Stratoflex, Flight Controls, Fuel Systems, CSO</div>
-                            <div style="margin-top: 8px; font-size: 11px;">Regional distribution | Multiple specialties</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- KEY CONTACTS -->
-                <div id="contacts" class="section section-content">
-                    <div class="section-header">
-                        <div class="section-color" style="background: #64748b;"></div>
-                        <div>
-                            <h2 class="section-title">Key Hiring Contacts</h2>
-                            <p class="section-subtitle">Talent acquisition and HR leadership across Parker divisions</p>
-                        </div>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">Senior Talent Acquisition Recruiters</h3>
-                    <div class="table-section">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Title</th>
-                                    <th>Focus Area</th>
-                                    <th>LinkedIn</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>Adam Salazar</strong></td>
-                                    <td>Sr. Talent Acquisition Recruiter</td>
-                                    <td>Parker Aerospace</td>
-                                    <td><a href="#" class="link">View Profile</a></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Tracy Quevedo</strong></td>
-                                    <td>Senior Talent Acquisition Recruiter</td>
-                                    <td>Parker Aerospace (salary negotiations & offers)</td>
-                                    <td><a href="#" class="link">View Profile</a></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Parker Aerospace TA Team</strong></td>
-                                    <td>Senior HR Business Partner</td>
-                                    <td>Aerospace Group (open position Q2 2026)</td>
-                                    <td><a href="https://parkercareers.ttcportals.com" class="link">Careers Portal</a></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">Division Leadership</h3>
-                    <div class="table-section">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Division</th>
-                                    <th>Leadership Role</th>
-                                    <th>Location</th>
-                                    <th>Target for Outreach</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>Exotic Metals Forming</strong></td>
-                                    <td>Division President (Bill Binder)</td>
-                                    <td>Kent, WA</td>
-                                    <td>Manufacturing hiring authority</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Lord Corporation</strong></td>
-                                    <td>Engineering & Operations Leadership</td>
-                                    <td>Cary, NC (HQ)</td>
-                                    <td>Materials & process engineering</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Meggitt PLC</strong></td>
-                                    <td>Simi Valley Operations Leadership</td>
-                                    <td>Simi Valley, CA</td>
-                                    <td>Fire & Safety systems, largest hub</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Curtis Instruments</strong></td>
-                                    <td>Engineering & Manufacturing Leadership</td>
-                                    <td>Mount Kisco, NY</td>
-                                    <td>Electronics, EV technology hiring</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">General Hiring Resources</h3>
-                    <div class="grid">
-                        <div class="card" style="border-top-color: #64748b;">
-                            <div class="card-title">Official Careers Portal</div>
-                            <div class="card-detail"><strong>URL:</strong> <a href="https://parkercareers.ttcportals.com" class="link">parkercareers.ttcportals.com</a></div>
-                            <div class="card-detail"><strong>Features:</strong> Job search by location, division, and position type</div>
-                            <div class="card-detail"><strong>Talent Network:</strong> Submit resume for future opportunities</div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #64748b;">
-                            <div class="card-title">Parker LinkedIn Job Board</div>
-                            <div class="card-detail"><strong>Current Openings:</strong> 439+ jobs listed</div>
-                            <div class="card-detail"><strong>Updated:</strong> Daily with new positions</div>
-                            <div class="card-detail"><strong>Recruiting Activity:</strong> 12+ new roles/week</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- FAST-SELL SKILLS -->
-                <div id="skills" class="section section-content">
-                    <div class="section-header">
-                        <div class="section-color" style="background: #64748b;"></div>
-                        <div>
-                            <h2 class="section-title">Fast-Sell Skills & Certifications</h2>
-                            <p class="section-subtitle">High-demand skills across Parker Aerospace divisions</p>
-                        </div>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">Top 12 Fast-Moving Skills (35+ open roles each)</h3>
-                    <div class="grid">
-                        <div class="card" style="border-top-color: #3b82f6;">
-                            <div class="card-title">Manufacturing Engineer</div>
-                            <div class="card-detail"><strong>Open Positions:</strong> 35+</div>
-                            <div class="card-detail"><strong>Divisions:</strong> All divisions</div>
-                            <div class="card-detail"><strong>Key Focus:</strong> Process optimization, lean manufacturing</div>
-                            <div style="margin-top: 12px;">
-                                <span class="tag">DMAIC Six Sigma</span>
-                                <span class="tag">Lean Manufacturing</span>
-                                <span class="tag">CAD/CAM</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #3b82f6;">
-                            <div class="card-title">Quality Engineer / Inspector</div>
-                            <div class="card-detail"><strong>Open Positions:</strong> 28+</div>
-                            <div class="card-detail"><strong>Divisions:</strong> All divisions (critical role)</div>
-                            <div class="card-detail"><strong>Key Focus:</strong> Compliance, testing, certification</div>
-                            <div style="margin-top: 12px;">
-                                <span class="tag">AS9100</span>
-                                <span class="tag">FAI (First Article Inspection)</span>
-                                <span class="tag">SPC/Statistical Process</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #3b82f6;">
-                            <div class="card-title">Aerospace Welder (TIG/MIG)</div>
-                            <div class="card-detail"><strong>Open Positions:</strong> 22+</div>
-                            <div class="card-detail"><strong>Divisions:</strong> Exotic Metals, Core</div>
-                            <div class="card-detail"><strong>Key Focus:</strong> Exotic metals, high-temperature materials</div>
-                            <div style="margin-top: 12px;">
-                                <span class="tag">Titanium Welding</span>
-                                <span class="tag">Chromoly Expertise</span>
-                                <span class="tag">AWS Certification</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #3b82f6;">
-                            <div class="card-title">Systems Engineer</div>
-                            <div class="card-detail"><strong>Open Positions:</strong> 16+</div>
-                            <div class="card-detail"><strong>Divisions:</strong> Core, Meggitt, Curtis</div>
-                            <div class="card-detail"><strong>Key Focus:</strong> Requirements, integration, verification</div>
-                            <div style="margin-top: 12px;">
-                                <span class="tag">DO-178C / DO-254</span>
-                                <span class="tag">MBSE</span>
-                                <span class="tag">Requirements Management</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #3b82f6;">
-                            <div class="card-title">PCB / Electronics Design Engineer</div>
-                            <div class="card-detail"><strong>Open Positions:</strong> 18+</div>
-                            <div class="card-detail"><strong>Divisions:</strong> Curtis, Core, Meggitt</div>
-                            <div class="card-detail"><strong>Key Focus:</strong> Motor control, power electronics, battery systems</div>
-                            <div style="margin-top: 12px;">
-                                <span class="tag">Altium / Cadence</span>
-                                <span class="tag">Power Electronics</span>
-                                <span class="tag">FPGA / Verilog</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #3b82f6;">
-                            <div class="card-title">Embedded Software Engineer</div>
-                            <div class="card-detail"><strong>Open Positions:</strong> 12+</div>
-                            <div class="card-detail"><strong>Divisions:</strong> Curtis, Core, Meggitt</div>
-                            <div class="card-detail"><strong>Key Focus:</strong> Firmware, real-time systems, EV controls</div>
-                            <div style="margin-top: 12px;">
-                                <span class="tag">C/C++</span>
-                                <span class="tag">Real-Time OS</span>
-                                <span class="tag">AUTOSAR</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #3b82f6;">
-                            <div class="card-title">Structural / Design Engineer</div>
-                            <div class="card-detail"><strong>Open Positions:</strong> 10+</div>
-                            <div class="card-detail"><strong>Divisions:</strong> Core, Meggitt</div>
-                            <div class="card-detail"><strong>Key Focus:</strong> FEA, stress analysis, composite design</div>
-                            <div style="margin-top: 12px;">
-                                <span class="tag">CATIA V5/V6</span>
-                                <span class="tag">ANSYS / NASTRAN</span>
-                                <span class="tag">Composites Design</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #3b82f6;">
-                            <div class="card-title">Materials / Process Engineer</div>
-                            <div class="card-detail"><strong>Open Positions:</strong> 14+</div>
-                            <div class="card-detail"><strong>Divisions:</strong> Lord, Exotic, Core</div>
-                            <div class="card-detail"><strong>Key Focus:</strong> Material science, adhesives, thermal management</div>
-                            <div style="margin-top: 12px;">
-                                <span class="tag">Polymer Chemistry</span>
-                                <span class="tag">Composite Materials</span>
-                                <span class="tag">Thermal Analysis</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #3b82f6;">
-                            <div class="card-title">Manufacturing Assembler/Operator</div>
-                            <div class="card-detail"><strong>Open Positions:</strong> 42+</div>
-                            <div class="card-detail"><strong>Divisions:</strong> Meggitt (largest), Exotic, Core</div>
-                            <div class="card-detail"><strong>Key Focus:</strong> Production efficiency, quality assurance</div>
-                            <div style="margin-top: 12px;">
-                                <span class="tag">Precision Assembly</span>
-                                <span class="tag">Quality Control</span>
-                                <span class="tag">Production Safety</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #3b82f6;">
-                            <div class="card-title">Program Manager</div>
-                            <div class="card-detail"><strong>Open Positions:</strong> 6+</div>
-                            <div class="card-detail"><strong>Divisions:</strong> Core, Meggitt</div>
-                            <div class="card-detail"><strong>Key Focus:</strong> Schedule, budget, stakeholder management</div>
-                            <div style="margin-top: 12px;">
-                                <span class="tag">PMP / PMI-ACP</span>
-                                <span class="tag">Earned Value Mgmt</span>
-                                <span class="tag">Risk Management</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #3b82f6;">
-                            <div class="card-title">Supply Chain / Procurement</div>
-                            <div class="card-detail"><strong>Open Positions:</strong> 8+</div>
-                            <div class="card-detail"><strong>Divisions:</strong> All divisions</div>
-                            <div class="card-detail"><strong>Key Focus:</strong> Vendor management, cost optimization</div>
-                            <div style="margin-top: 12px;">
-                                <span class="tag">APICS CSCP</span>
-                                <span class="tag">Supplier Quality</span>
-                                <span class="tag">ERP Systems (SAP)</span>
-                            </div>
-                        </div>
-
-                        <div class="card" style="border-top-color: #3b82f6;">
-                            <div class="card-title">Safety / Environmental Engineer</div>
-                            <div class="card-detail"><strong>Open Positions:</strong> 5+</div>
-                            <div class="card-detail"><strong>Divisions:</strong> Meggitt (fire safety focus), Core</div>
-                            <div class="card-detail"><strong>Key Focus:</strong> OSHA compliance, fire suppression, environmental</div>
-                            <div style="margin-top: 12px;">
-                                <span class="tag">OSHA / TSA Security</span>
-                                <span class="tag">Fire Safety Systems</span>
-                                <span class="tag">Environmental Compliance</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <h3 style="font-size: 14px; margin: 24px 0 16px 0; color: #475569;">Critical Aerospace Certifications</h3>
-                    <div class="table-section">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Certification</th>
-                                    <th>Requirement</th>
-                                    <th>Applicable Divisions</th>
-                                    <th>Hiring Impact</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>AS9100 (Aviation Standard)</strong></td>
-                                    <td>Quality management for aerospace, defense, space</td>
-                                    <td>All divisions (mandatory)</td>
-                                    <td><span class="status-badge status-active">Critical</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>FAI (First Article Inspection)</strong></td>
-                                    <td>New product/process validation certification</td>
-                                    <td>Quality, Manufacturing</td>
-                                    <td><span class="status-badge status-active">Critical</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>DO-178C / DO-254</strong></td>
-                                    <td>Software / Hardware certification for avionics</td>
-                                    <td>Core, Curtis, Meggitt</td>
-                                    <td><span class="status-badge status-active">Critical</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Lean Manufacturing / Six Sigma</strong></td>
-                                    <td>Process improvement methodologies</td>
-                                    <td>All divisions</td>
-                                    <td><span class="status-badge status-expanding">High Preference</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>CATIA V5 / V6</strong></td>
-                                    <td>Design & engineering CAD platform</td>
-                                    <td>Design, Manufacturing Engineering</td>
-                                    <td><span class="status-badge status-expanding">High Preference</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>AWS Certified Welder</strong></td>
-                                    <td>AWS D1.1 aerospace welding certification</td>
-                                    <td>Exotic Metals, Core (fabrication)</td>
-                                    <td><span class="status-badge status-active">Critical</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </div>
-        </div>
+<!-- ══════════════════════════════════════════════════════════════════════
+     PARKER AEROSPACE — DYNAMIC DATA STORE
+     Refresh cycle: every 5 days
+     Sources: Parker Hannifin Q4 FY2025 Earnings (Aug 2025), PH 10-K FY2025,
+              Parker Aerospace divisions directory, LinkedIn hiring data
+     Run: data_refresh_parker.py to update all values below.
+     Parker ticker: PH (NYSE) · Aerospace = ~31% of group revenue
+══════════════════════════════════════════════════════════════════════ -->
+<script>
+const PA_DATA = {
+
+  // ── Meta ─────────────────────────────────────────────────────────────
+  lastRefreshed: "Apr 19, 2026",
+  dataSource:    "Parker Hannifin Q4 FY2025 Earnings (Aug 2025) + PH 10-K + Aerospace Divisions Directory",
+  ticker:        "PH (NYSE)",
+  hq:            "Cleveland, OH (Corporate) · Irvine, CA (Aerospace Group HQ)",
+
+  // ── Group Financials ──────────────────────────────────────────────────
+  groupRevenue:  19.9,   // $B FY2025 total Parker Hannifin
+  aeroRevenue:   6.2,    // $B FY2025 Aerospace Systems Group
+  aeroShare:     31,     // % of group revenue
+  aeroGrowth:    13,     // % organic YoY
+  aeroMargin:    29,     // % adjusted segment operating margin (record)
+  aeroBacklog:   7.4,    // $B record backlog Jun 30 2025
+  groupEbitda:   27.3,   // % EBITDA margin
+  openRoles:     991,    // total Parker Hannifin open roles Mar 2026
+  meggittSynergy:"$50M remaining (FY2026) — integration delivering ahead of schedule",
+  fy26Guidance:  "8–11% organic aerospace growth projected",
+
+  // ── Leadership ────────────────────────────────────────────────────────
+  leadership: {
+    ceo: { name:"Jennifer A. Parmentier", title:"CEO & Chairman, Parker Hannifin", since:"Jan 2023 (CEO) · Jan 2024 (Chairman)", location:"Cleveland, OH" },
+    cfo: { name:"Todd Leombruno", title:"EVP & CFO, Parker Hannifin", since:"2021", location:"Cleveland, OH" },
+    aeroPresident: { name:"Jay P. Reidy", title:"VP & President — Aerospace Systems Group", since:"Jan 1, 2024", location:"Irvine, CA" },
+    vpOps: { name:"Mike Portela", title:"Group VP, Operations — Aerospace", since:"~2023", location:"Irvine, CA" },
+    vpSC: { name:"Ryan McElroy", title:"VP, Supply Chain Management — Aerospace", since:"~2023", location:"Irvine, CA" },
+    vpAftermarket: { name:"Mark Mourani", title:"VP, Commercial Aftermarket — Aerospace", since:"~2023", location:"Irvine, CA" },
+    evpHR: { name:"Mark Hart", title:"EVP, Human Resources & External Affairs", since:"~2020", location:"Cleveland, OH" }
+  },
+
+  // ── Aerospace Group Divisions (from Parker Meggitt slide) ─────────────
+  // meggitt:true = new division from Meggitt acquisition (blue in slide)
+  aeroGroup: {
+    label: "Aerospace Group",
+    divCount: 12,
+    siteCount: 43,
+    divisions: [
+      { name:"Military Flight Controls Division",   sites:["Irvine, CA","Dublin, GA"],
+        focus:"Fly-by-wire, electrohydraulic flight controls, advanced motor design — F-35, military rotorcraft", meggitt:false },
+      { name:"Commercial Flight Controls Division", sites:["Ogden, UT"],
+        focus:"Commercial aircraft primary/secondary flight controls, high-lift actuation — 737 MAX, A320neo", meggitt:false },
+      { name:"Hydraulic Systems Division",          sites:["Kalamazoo, MI"],
+        focus:"Aircraft hydraulic reservoirs, accumulators, filters, valves, heat exchangers, pumps", meggitt:false },
+      { name:"Fluid Systems Division",              sites:["Irvine, CA","Elyria, OH","Hauppauge, NY","Guaymas Mexico","N. Hollywood CA"],
+        focus:"Fluid conveyance — hoses, tubes, fittings, couplings, manifolds for fuel/hydraulic/pneumatic", meggitt:false },
+      { name:"Gas Turbine Fuel Systems Division",   sites:["Mentor, OH","Glendale, AZ","Naples, FL","Devens, MA","Mt. Holly, SC","KL, Malaysia","Troy, IN","San Diego, CA","Ansty Park, UK"],
+        focus:"Engine fuel nozzles, manifolds, oil pumps, thermal management — LEAP, GE9X, Trent 1000", meggitt:false },
+      { name:"Exotic Metals Forming Division",      sites:["Kent, WA","Spokane, WA","Phoenix, AZ"],
+        focus:"Titanium, superalloy, aluminium structural forming — nacelles, airframes, engine components", meggitt:false },
+      { name:"Stratoflex Products Division",        sites:["Ft. Worth, TX","Camarillo, CA","Jacksonville, FL","Monterrey, Mexico"],
+        focus:"Aerospace hose assemblies, tubing, fittings for fuel/hydraulic/pneumatic systems", meggitt:false },
+      { name:"Braking Systems Division",            sites:["Akron, OH","Danville, KY","Queretaro Mexico","Coventry UK","Ansty Park UK"],
+        focus:"Carbon/steel aircraft brakes, wheels, anti-skid systems — B787, A350, A320, business jets", meggitt:true },
+      { name:"Fire, Safety & Power Systems Division", sites:["Simi Valley, CA","Portland, OR","Tucson, AZ"],
+        focus:"Fire detection/extinguishing, halon/water mist, electrical power distribution — Meggitt-origin", meggitt:true },
+      { name:"Defense Systems Division",            sites:["Irvine, CA (Defense)","Irvine, CA (MOC)"],
+        focus:"Integrated defense systems, mission operations, classified military program support", meggitt:true },
+      { name:"Motion, Power & Sensing Division",    sites:["Avrille France","Archamps France","Fribourg Switzerland","Fareham UK","Dong Nai Vietnam","Wiesbaden Germany"],
+        focus:"Sensors, actuators, LVDT, position sensing, motion control — Meggitt-origin global footprint", meggitt:true },
+      { name:"Services & Support / CSO",            sites:["Miami, FL","Gardena, CA","Singapore","Ansty Park UK","Irvine, CA"],
+        focus:"Customer Support Operations — aftermarket MRO, spare parts, field engineering, 24/7 AOG support", meggitt:false }
+    ]
+  },
+
+  // ── Platform Solutions (5 from Parker Aerospace slide) ──────────────
+  platforms: [
+    { name:"Flight Controls", color:"#f59e0b", icon:"✈️",
+      products:["Trim actuation","Cockpit controls","Primary / secondary flight control actuators","Servovalves","Control electronics & software","Surface-position sensors","High-lift actuation"],
+      cyient:"DO-178C software validation, FCS integration testing, certification documentation for flight control systems — Level A/B software capability" },
+    { name:"Engine", color:"#f47920", icon:"🔥",
+      products:["Fuel spray nozzles","Manifolds & pigtails","Thrust reverser actuators","Engine build unit","Heat management systems","Oil pumps & reservoirs","Pneumatics"],
+      cyient:"Engine component tech pubs (CMM/IPC), fuel system CFD analysis, thermal management CAD — Gas Turbine Fuel Systems (Mentor OH) is primary entry" },
+    { name:"Hydraulics", color:"#0075be", icon:"💧",
+      products:["Reservoirs & accumulators","Filters & valves","Heat exchangers","Pumps","Ground service equipment","Control electronics & software"],
+      cyient:"Hydraulic systems analysis, DO-160 test documentation, circuit design for next-gen electro-hydraulic systems" },
+    { name:"Fluid Conveyance", color:"#002b5c", icon:"🔧",
+      products:["Aerospace hoses & assemblies","Tubes & fittings","Couplings & manifolds","Fuel / hydraulic / pneumatic routing"],
+      cyient:"Fluid routing design, system integration documentation, installation design drawings — Fluid Systems (Elyria OH) and Stratoflex (Ft Worth TX)" },
+    { name:"Fuel & Inerting", color:"#6b7280", icon:"⛽",
+      products:["Fuel gauging management","Fuel pumps & valves","Control electronics & software","Inerting systems","NFBO (Nitrogen-enriched air systems)"],
+      cyient:"Fuel system certification (DO-160, FAR 25), inerting system analysis, safety case documentation — F-35 and commercial platforms" }
+  ],
+
+  // ── Signal Chains (5 sales-ready chains) ─────────────────────────────
+  signals: [
+    { num:1, color:"#f47920",
+      signal:   "Meggitt $50M Synergy Target — FY2026 Final Push",
+      response: "Parker management has publicly stated $50M synergy remains for FY2026. Cost reduction pressure = outsourcing appetite for Braking, Fire/Safety & Defense divisions.",
+      gap:      "Braking Systems (Akron/Coventry), Fire Safety (Simi Valley), Motion Power & Sensing (France/UK/Vietnam) all have Meggitt-origin engineering headcount under margin pressure.",
+      entry:    "Email Jay Reidy (Aerospace President) or Mike Portela (VP Ops): 'Post-Meggitt integration synergy target — we can deliver the engineering cost model that closes the gap.'" },
+    { num:2, color:"#0075be",
+      signal:   "Boeing 737 MAX / LEAP Rate Increase → Parker Systems Demand",
+      response: "Boeing targeting 38+ MAX/month by 2026. Each aircraft = Parker flight controls, hydraulics, fuel systems. Rate increase = engineering bandwidth demand Parker can't fully absorb.",
+      gap:      "Commercial Flight Controls (Ogden UT) + Gas Turbine Fuel Systems (Mentor OH) are the bottleneck divisions. CAD, DO-178C, certification documentation are the outsource opportunities.",
+      entry:    "Target: VP Engineering, Commercial Flight Controls Division, Ogden UT. 'Boeing rate increase means cert documentation velocity is the constraint. We've run DO-178C programs at rate.'" },
+    { num:3, color:"#002b5c",
+      signal:   "F-35 Block 4 Modernization — Parker Integral Fuel & Inerting",
+      response: "F-35 Block 4 now expected 2031+. Parker supplies F-35 integral fuel and inerting systems. Long-duration program = continuous tech pubs, CMM updates, configuration management.",
+      gap:      "Defense Systems Division (Irvine CA) and Military Flight Controls (Irvine CA, Dublin GA) manage F-35 content. ITAR-compliant tech pubs and configuration management are outsourceable.",
+      entry:    "ITAR credential required. Lead with Cyient's ITAR registration. Target: Defense Systems Division VP Engineering, Irvine CA." },
+    { num:4, color:"#f59e0b",
+      signal:   "India Manufacturing Gap — No Parker Aerospace ER&D Center",
+      response: "Parker India (Navi Mumbai) is a distribution/industrial office only. Zero dedicated aerospace engineering center in India — unlike Honeywell (BIETC), GE (Titan), Embraer (Adani).",
+      gap:      "Cyient HQ in Hyderabad: aerospace AS9100D-certified, 3,000+ aerospace engineers, HAL/DRDO/BDL neighbours. Parker is the most un-tapped India opportunity in the A&D landscape.",
+      entry:    "Boardroom pitch to Jennifer Parmentier / Jay Reidy: 'Every major OEM has an India engineering center. Parker doesn't. Cyient can be your Parker Aerospace India.'" },
+    { num:5, color:"#16a34a",
+      signal:   "Record $7.4B Aerospace Backlog → Sustained ER&D Demand",
+      response: "Parker's $7.4B aerospace backlog represents 5–7 years of production visibility. Industry backlog of 17,000+ aircraft (60% of active fleet). Engineering demand is structural, not cyclical.",
+      gap:      "Record backlog means Parker engineering teams are stretched across 12 divisions and 43 sites. Outsourced ER&D is the only way to meet delivery without CAPEX growth.",
+      entry:    "Business case angle for Ryan McElroy (VP Supply Chain): 'Your backlog is a 5-year programme — you need engineering that scales with it without headcount risk.'" }
+  ],
+
+  // ── Outreach Playbook ─────────────────────────────────────────────────
+  outreachPlaybook: {
+    badge: "Cold→Warm",
+    headline: "Meggitt synergy + India gap + record backlog = three simultaneous cold-call openers",
+    triggers: [
+      { icon:"🔄", label:"Meggitt $50M Synergy — FY2026 Final Push",
+        body:"Parker has $50M synergy remaining from the $8.8B Meggitt acquisition. Management is under public earnings pressure to close it in FY2026. Cost reduction = outsourcing appetite across Braking, Fire Safety, and Defense divisions.",
+        action:"Email hook: 'Saw the $50M Meggitt synergy target in the Q4 earnings call. Outsourced ER&D is the fastest lever — we can close the engineering cost gap without headcount. 20 min?'" },
+      { icon:"🇮🇳", label:"India Engineering Gap — Parker Has None",
+        body:"Parker India is distribution only. No aerospace engineering center — unlike every other OEM in this portfolio. Cyient HQ is Hyderabad with AS9100D, 3,000+ aerospace engineers, and HAL/DRDO neighbours.",
+        action:"C-suite pitch: 'Honeywell, GE, Embraer all have India ER&D. Parker doesn't. Cyient can be your Parker Aerospace India for a fraction of a greenfield investment.'" },
+      { icon:"📈", label:"Record $7.4B Backlog — Engineering Stretched",
+        body:"Parker's record $7.4B aerospace backlog means 12 divisions across 43 sites are delivery-constrained. The only scalable solution is outsourced ER&D with proven aerospace AS9100D credentials.",
+        action:"VP Operations pitch to Mike Portela: 'A $7.4B backlog is a 5-year programme. You need engineering that scales with it on demand — not headcount risk.'" },
+      { icon:"✈️", label:"Boeing Rate Increase → Division-Level Pressure",
+        body:"Boeing targeting 38+ 737 MAX/month in 2026. Each aircraft = Parker flight controls, hydraulics, fuel systems. Commercial Flight Controls (Ogden) and Gas Turbine Fuel Systems (Mentor OH) are the stretched divisions.",
+        action:"Division-level email: 'Boeing's rate push is landing on your engineering schedule. We've run DO-178C cert documentation at Boeing rate programs before. Call?'" }
+    ],
+    coldToWarm: [
+      { step:1, label:"Signal Monitor", body:"Track Parker quarterly earnings (Meggitt synergy updates, aerospace backlog), Parker press releases, and LinkedIn job postings across Aerospace divisions (especially Ogden UT, Mentor OH, Simi Valley CA, Irvine CA)." },
+      { step:2, label:"Email Jay Reidy / Mike Portela", body:"Reference specific Meggitt synergy or backlog news. One sentence on Cyient's aerospace AS9100D credential. One question. No deck on first touch." },
+      { step:3, label:"LinkedIn Engagement", body:"Connect with Jay Reidy (Aerospace President, Irvine CA) and Ryan McElroy (VP Supply Chain). Comment on Parker aerospace content with substantive production insight." },
+      { step:4, label:"Division-Level Outreach", body:"After group-level warm-up, target division GMs/VPs directly — Gas Turbine Fuel Systems (Mentor OH), Braking Systems (Akron OH), Commercial Flight Controls (Ogden UT). Reference Parker group relationship." },
+      { step:5, label:"Warm Meeting & India Pitch", body:"First meeting agenda: Meggitt synergy ER&D lever → Cyient aerospace track record → India engineering center case study → Parker India greenfield vs. Cyient-as-partner decision." }
+    ]
+  },
+
+  // ── Partnerships & Alliances ──────────────────────────────────────────
+  partnerships: [
+    { name:"LTTS (L&T Technology Services)", type:"Existing Competitor", status:"Parker Ecosystem",
+      desc:"LTTS has a documented Parker Hannifin engagement (Machine I/O platform, Industry 4.0). They are already in the Parker ecosystem — primarily industrial/pneumatics, not aerospace ER&D.",
+      angle:"LTTS is Cyient's key competitor here. Differentiate on aerospace-specific credentials: AS9100D, DO-178C, DO-254, ITAR, Part 25 cert — none of which are LTTS's core." },
+    { name:"CDI Corporation (Engineering Staffing)", type:"Existing Vendor", status:"3-Year Agreement",
+      desc:"CDI has a 3-year managed staffing and project outsourcing agreement with Parker Aerospace. Provides contract engineering staff across multiple divisions.",
+      angle:"CDI is staffing, not ER&D. Cyient's pitch is project-based engineering outcomes, not bodies — lower management overhead, faster ramp, higher quality for cert-critical programs." },
+    { name:"Boeing (Commercial Flight Controls)", type:"OEM Customer", status:"Production Ramp",
+      desc:"Parker supplies primary/secondary flight controls for 737 MAX, 787. Boeing production rate increase drives sustained engineering demand for Parker Commercial Flight Controls (Ogden UT).",
+      angle:"Cyient's Boeing DLM production contract is the warm intro: 'We're already in Boeing's supply chain. Let us extend that relationship to your flight controls engineering team.'" },
+    { name:"Lockheed Martin (F-35 Defense)", type:"OEM Customer", status:"Active — Long Duration",
+      desc:"Parker supplies integral fuel & inerting systems for F-35. 191 F-35s delivered in 2025. Block 4 modernization extending program to 2031+. Defense Systems Division (Irvine CA) manages.",
+      angle:"F-35 tech pubs, CMM/IPC, and configuration management are long-horizon outsource opportunities. ITAR registration is the mandatory entry credential." },
+    { name:"CFM / GE / Rolls-Royce (Engine Systems)", type:"Engine OEM Partners", status:"Active",
+      desc:"Parker Gas Turbine Fuel Systems (Mentor OH) supplies fuel nozzles, manifolds, oil pumps for LEAP, GE9X, Trent 1000. Parker is embedded in every major current-generation engine programme.",
+      angle:"Engine system tech pubs, CFD analysis for nozzle optimisation, and oil system documentation — Cyient's CFM/Safran relationship provides warm credentialing into Parker GTFS." }
+  ],
+
+  // ── Industry Events 2026 ──────────────────────────────────────────────
+  events: [
+    { name:"Farnborough Airshow", date:"July 20–24, 2026", location:"Farnborough, UK",
+      type:"Trade Show", priority:"🔴 MUST",
+      why:"Parker Aerospace has a major presence every Farnborough — Motion Power & Sensing and Braking Systems (Ansty Park, Coventry UK) leadership attend. Best access to UK/European Meggitt-origin division heads." },
+    { name:"AeroDef Manufacturing", date:"Apr 14–16, 2026", location:"Boston, MA",
+      type:"Conference", priority:"🔴 MUST",
+      why:"Parker Defense Systems and supply chain leadership attends. F-35 and military systems engineering angle — ITAR, defence ER&D, and supply chain engineering pitch lands here." },
+    { name:"MRO Americas", date:"Apr 21–23, 2026", location:"Orlando, FL",
+      type:"Trade Show", priority:"🟠 HIGH",
+      why:"Parker CSO (Services & Support) and Braking Systems aftermarket team attends. Tech pubs, overhaul documentation, and CMM/IPC engineering for brakes and fuel systems." },
+    { name:"NBAA-BACE", date:"Oct 20–22, 2026", location:"Las Vegas, NV",
+      type:"Trade Show", priority:"🟠 HIGH",
+      why:"Parker Aerospace supplies nearly every business jet OEM (Bombardier, Gulfstream, Textron). NBAA is where Parker's bizjet systems team gathers — good for Commercial Flight Controls and Braking Systems access." },
+    { name:"Paris Air Show", date:"June 2027", location:"Le Bourget, France",
+      type:"Trade Show", priority:"🟡 PLAN AHEAD",
+      why:"Parker's European divisions (Motion Power & Sensing, Braking/Coventry) dominate at Paris. RISE and next-gen propulsion supply chain conversations start at Paris — plan FY2027 presence now." }
+  ],
+
+  // ── Hiring Intelligence ───────────────────────────────────────────────
+  hiring: {
+    openRoles: 991,
+    aeroFocus: ["Aerospace Engineering (multiple divisions)","Avionics / Systems Engineering (Irvine CA, Ogden UT)","Manufacturing Engineering (Akron OH, Mentor OH)","HR Manager — Aerospace Group","TA Partner — Aerospace (Kevin Mendez, Senior TA)"],
+    hotDivisions: [
+      { div:"Gas Turbine Fuel Systems", loc:"Mentor, OH", why:"LEAP production ramp driving continuous engineering demand" },
+      { div:"Commercial Flight Controls", loc:"Ogden, UT", why:"Boeing 737 MAX rate push; DO-178C cert documentation bottleneck" },
+      { div:"Braking Systems", loc:"Akron, OH / Coventry UK", why:"Meggitt integration; B787/A350 brake system ramp-up" },
+      { div:"Defense Systems", loc:"Irvine, CA", why:"F-35 Block 4 + defence budget growth; classified engineering demand" },
+      { div:"Motion Power & Sensing", loc:"Fareham UK / Fribourg Switzerland", why:"Sensor/actuator demand across next-gen platforms" }
+    ],
+    taContacts: [
+      { name:"Kevin Mendez", title:"Senior Talent Acquisition Partner", location:"Parker Hannifin (Aerospace)", li:"linkedin.com/in/ — search Kevin Mendez Parker Hannifin" },
+      { name:"Rick Clary", title:"Director HR — Aerospace Group", location:"Irvine, CA / Cleveland, OH", li:"Search Rick Clary Parker Aerospace on LinkedIn" },
+      { name:"Mark Hart", title:"EVP Human Resources & External Affairs", location:"Cleveland, OH", li:"Corporate HR authority — group-level ER&D resourcing decisions" }
+    ]
+  },
+
+  // ── India Strategy ────────────────────────────────────────────────────
+  india: {
+    parkerPresence: "Parker India Private Limited — Navi Mumbai office (distribution/industrial only). ZERO dedicated aerospace engineering center.",
+    gap: "Unlike Honeywell (BIETC Bangalore/Chennai 13k+ engineers), GE (Titan India LEAP LPT contract), and Embraer (Adani assembly line), Parker has NO India aerospace ER&D. This is the largest India whitespace in the A&D top 10.",
+    cyientAdvantage: [
+      "Hyderabad HQ: 3,000+ aerospace engineers, AS9100D certified, HAL / DRDO / BDL co-located",
+      "India cost model: ~60% cost advantage vs. UK/US divisional engineering",
+      "ITAR-registered and FIPS compliant — can support Defense Systems Division programs",
+      "Existing HAL and Indian defense customer relationships = credibility with India govt stakeholders"
+    ],
+    pitch: "Parker Aerospace India — Position Cyient as the Parker Aerospace engineering centre in India. Same model as BAeHAL (BAE), BIETC (Honeywell), Titan (GE). Parker is the last major A&D OEM without an India ER&D footprint.",
+    targets: [
+      { role:"Jennifer A. Parmentier (CEO)", angle:"C-suite India strategy briefing — competitive peer pressure (Honeywell/GE/Embraer already in India)" },
+      { role:"Jay P. Reidy (Aerospace President)", angle:"India ER&D centre: cost model + 43-site support from Hyderabad" },
+      { role:"Ryan McElroy (VP Supply Chain)", angle:"India supply chain engineering support: GTFS, Braking, Commercial FCS at India cost" }
+    ]
+  },
+
+  // ── Competitive Intel ─────────────────────────────────────────────────
+  competitors: [
+    { name:"LTTS (L&T Technology Services)", presence:"Parker industrial/pneumatics (confirmed)", threat:"Medium",
+      note:"LTTS is in Parker's ecosystem via machine I/O/Industry 4.0 work. Not deep in aerospace ER&D. Differentiate on: AS9100D, DO-178C, DO-254, aerospace cert — these are not LTTS's strengths." },
+    { name:"CDI Corporation", presence:"3-year managed staffing agreement (Aerospace)", threat:"Low–Medium",
+      note:"CDI is a staffing firm — placing bodies, not delivering engineering outcomes. Cyient's model is project-based with accountability for certification milestones. Higher value, easier ROI to justify." },
+    { name:"Collins Aerospace (RTX)", presence:"Parker Aerospace customer relationship context", threat:"None Direct",
+      note:"Collins is an OEM competitor to Parker in flight controls, not an ER&D vendor. Context: when pitching Parker, Collins' competitive pressure on Parker programs is a useful urgency lever." },
+    { name:"Tata Technologies", presence:"General aerospace ER&D — no confirmed Parker engagement", threat:"Low",
+      note:"Tata Tech competes in aerospace ER&D but no Parker relationship confirmed. Cyient's aerospace cert depth (DO-178C, DO-254) and HAL/defense credentials differentiate." }
+  ],
+
+  // ── Fast-Sell Skills ──────────────────────────────────────────────────
+  fastSell: [
+    { title:"DO-178C Level A/B Software Validation", relevance:"Critical for Commercial & Military Flight Controls (Ogden UT, Irvine CA, Dublin GA). FCS software cert is the hardest and most expensive ER&D line item — and the most outsourceable." },
+    { title:"Gas Turbine Systems Tech Pubs (CMM/IPC)", relevance:"Gas Turbine Fuel Systems (Mentor OH) ships to every major engine OEM. Continuous CMM, IPC, service bulletin authoring work — directly outsourceable." },
+    { title:"Braking Systems Structural Analysis + Cert", relevance:"Braking Systems Division (Akron/Coventry) is Meggitt-origin, under synergy pressure. FEA structural analysis, DO-160 test docs, brake certification support." },
+    { title:"ITAR-Compliant Defense ER&D", relevance:"Defense Systems Division (Irvine CA) manages F-35 and classified programmes. ITAR registration + FIPS-compliant delivery is a mandatory credential — and a competitive moat." },
+    { title:"India Cost Arbitrage at AS9100D Quality", relevance:"For every Parker division spending on UK/US engineering: Braking (Coventry), Motion Power & Sensing (Fareham/Fribourg), Gas Turbine (Ansty Park). India team at 60% cost savings with aerospace cert pedigree." }
+  ],
+
+  // ── Sales Plays ──────────────────────────────────────────────────────
+  salesPlays: [
+    { color:"#f47920", icon:"🔄",
+      title:"Play 1 — Meggitt Synergy Cost Reduction",
+      targetLine:"Target: Aerospace President · VP Ops · FY2026 window",
+      body:"Parker publicly stated $50M Meggitt synergy remaining in FY2026 earnings calls. Engineering outsource is the fastest lever — Braking Systems (Akron/Coventry), Fire Safety (Simi Valley), Motion Power & Sensing (France/UK) are the synergy pressure points.",
+      action:"Build a one-page 'Meggitt ER&D Outsource Business Case' showing: Parker division engineering cost vs. Cyient India cost model → savings per division → projected contribution to $50M synergy. Present to VP Ops at AeroDef (Apr 14–16).",
+      actionColor:"warn-orange" },
+    { color:"#0075be", icon:"🇮🇳",
+      title:"Play 2 — Parker Aerospace India Centre",
+      targetLine:"Target: Group CEO · Aerospace Group President · Strategic C-suite pitch",
+      body:"Parker is the last major A&D OEM without an India aerospace engineering center. Honeywell (BIETC, 13k+ engineers), GE (Titan India, LEAP LPT), Embraer (Adani assembly line) are all there. Cyient HQ is Hyderabad — AS9100D, 3,000+ aerospace engineers, HAL/DRDO co-located.",
+      action:"Executive briefing deck: 'Parker Aerospace India — the case for Hyderabad.' Competitive peer pressure slide (Honeywell/GE/Embraer India footprints). Cyient as managed service vs. greenfield investment. Target C-suite at Farnborough (Jul 20–24).",
+      actionColor:"warn-blue" },
+    { color:"#002b5c", icon:"⚙️",
+      title:"Play 3 — Gas Turbine Fuel Systems Entry (Mentor, OH)",
+      targetLine:"Target: Division VP Engineering, Gas Turbine Fuel Systems · Mentor OH",
+      body:"Gas Turbine Fuel Systems (Mentor, OH) ships fuel nozzles, manifolds, oil pumps for LEAP, GE9X, Trent 1000. LEAP production ramp = continuous tech pubs, CMM/IPC, service bulletin authoring, and thermal analysis demand. This is the most straightforward ER&D entry point in Parker Aerospace.",
+      action:"Cold email VP Engineering Gas Turbine Fuel Systems at Mentor OH. Reference Cyient Safran/CFM credential. Attach 1-page capability profile: 'CMM/IPC authoring for turbine fuel systems at Boeing/CFM production rates.' Follow up at MRO Americas (Apr 21–23).",
+      actionColor:"warn-green" }
+  ],
+
+  // ── Opportunity Scores ────────────────────────────────────────────────
+  opportunities: [
+    { label:"Gas Turbine Fuel Systems — Tech Pubs / CMM",    score:91 },
+    { label:"Commercial FCS — DO-178C Cert Documentation",   score:88 },
+    { label:"Braking Systems — Structural Analysis / FEA",   score:85 },
+    { label:"India ER&D Centre (Parker HAS none)",            score:95 },
+    { label:"Defense Systems — ITAR Tech Pubs / Config Mgmt",score:72 },
+    { label:"Meggitt Synergy — Outsource Cost Reduction",    score:82 },
+    { label:"Fluid Systems — System Integration Docs",        score:68 }
+  ]
+};
+</script>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-pill">✈ BEAKON</div>
+  <div class="topbar-title" id="tb-title">Parker Aerospace — Sales Intelligence Dashboard</div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <div class="pill" id="tb-backlog">$7.4B Backlog</div>
+    <div class="pill" id="tb-rev">$6.2B Aero Revenue</div>
+    <div class="pill">NYSE: PH</div>
+    <div class="pill-status">● Live</div>
+  </div>
+</div>
+
+<!-- REFRESH BANNER -->
+<div class="refresh-banner">
+  <span id="banner-text">📡 Parker Hannifin — Aerospace Systems Group · 12 Divisions / 43 Sites post-Meggitt · Aero Margin: 29% (record)</span>
+  <span style="font-size:11px;opacity:.8;" id="banner-refresh">Data: Apr 2026</span>
+</div>
+
+<div class="container">
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Parker Aerospace</div>
+    <div style="padding:8px 15px;font-size:10.5px;color:#99b2cc;line-height:1.5;">Irvine, CA · Cleveland, OH<br>12 Divisions · 43 Sites<br>Meggitt Integration 2022</div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Sales</div>
+    <div class="sidebar-item active" onclick="switchSection(event,'overview')">📊 Summary KPIs</div>
+    <div class="sidebar-item" onclick="switchSection(event,'org')">🏢 Divisions & Locations</div>
+    <div class="sidebar-item" onclick="switchSection(event,'contacts')">👥 Key Contacts</div>
+    <div class="sidebar-item" onclick="switchSection(event,'actions')">🎯 Sales Actions</div>
+    <div class="sidebar-item" onclick="switchSection(event,'skills')">⚡ Fast-Sell Skills</div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Intelligence</div>
+    <div class="sidebar-item" onclick="switchSection(event,'platforms')">⚙️ Platform Solutions</div>
+    <div class="sidebar-item" onclick="switchSection(event,'signals')">📡 Signal Chains</div>
+    <div class="sidebar-item" onclick="switchSection(event,'hiring')">💼 Hiring Intelligence</div>
+    <div class="sidebar-item" onclick="switchSection(event,'competitive')">⚔️ Competitive Intel</div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Outreach Playbook</div>
+    <div class="sidebar-item" onclick="switchSection(event,'outreach')">🤝 Outreach Playbook <span style="background:#4caf50;color:#fff;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;margin-left:4px;">Cold→Warm</span></div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Partnership &amp; Alliances</div>
+    <div class="sidebar-item" onclick="switchSection(event,'partnerships')">🤝 Partnerships &amp; Alliances</div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Industry Events</div>
+    <div class="sidebar-item" onclick="switchSection(event,'events')">📅 Industry Events</div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Strategy</div>
+    <div class="sidebar-item" onclick="switchSection(event,'india')">🇮🇳 India Strategy</div>
+  </div>
+  <div style="padding:15px;font-size:10px;color:#99b2cc;border-top:1px solid rgba(255,255,255,0.1);margin-top:10px;">
+    Last refreshed: <span id="sb-refresh">—</span>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+<!-- ═══ OVERVIEW ═══ -->
+<div id="overview" class="section active">
+  <div class="section-title">📊 Parker Aerospace — Summary KPIs</div>
+
+  <div class="grid-4">
+    <div class="card"><div class="card-title">Aerospace Revenue</div><div class="kpi" id="ov-arev">—</div><div class="kpi-label">FY2025 Aerospace Systems Group</div><div class="kpi-change" id="ov-agrow">—</div></div>
+    <div class="card"><div class="card-title">Aero Backlog</div><div class="kpi" id="ov-backlog">—</div><div class="kpi-label">Record Jun 30 2025</div><div class="kpi-change">↑ 5–7yr visibility</div></div>
+    <div class="card"><div class="card-title">Aero Margin</div><div class="kpi" id="ov-margin">—</div><div class="kpi-label">Adjusted Seg. Operating Margin</div><div class="kpi-change">Record — 300bps improvement</div></div>
+    <div class="card"><div class="card-title">Open Roles</div><div class="kpi" id="ov-roles">—</div><div class="kpi-label">Parker Hannifin total Mar 2026</div><div class="kpi-change">Active hiring across all divisions</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card" style="border-top-color:#f47920;">
+      <div class="card-title">Meggitt Integration Status</div>
+      <p style="font-size:13px;font-weight:700;color:#002b5c;margin-bottom:6px;" id="ov-meggitt">—</p>
+      <p style="font-size:12px;color:#555;line-height:1.6;">4 new divisions in Aerospace Group (Braking, Fire/Safety, Defense, Motion/Power/Sensing) + 3 in Engineered Materials + 1 in Filtration. Integration synergies delivering ahead of schedule.</p>
     </div>
+    <div class="card" style="border-top-color:#16a34a;">
+      <div class="card-title">FY2026 Guidance</div>
+      <p style="font-size:13px;font-weight:700;color:#002b5c;margin-bottom:6px;" id="ov-guidance">—</p>
+      <p style="font-size:12px;color:#555;line-height:1.6;">Driven by Boeing/Airbus commercial rate increases, F-35 sustained demand, and Meggitt defence platform growth. Record backlog provides multi-year revenue visibility.</p>
+    </div>
+  </div>
 
-    <script>
-        function switchSection(sectionId) {
-            // Hide all sections
-            document.querySelectorAll('.section-content').forEach(s => s.classList.remove('active'));
-            // Remove active from all sidebar items
-            document.querySelectorAll('.sidebar-item').forEach(l => l.classList.remove('active'));
-            // Show selected section
-            document.getElementById(sectionId).classList.add('active');
-            // Highlight the clicked item (walk up to .sidebar-item if needed)
-            let el = event.target;
-            while (el && !el.classList.contains('sidebar-item')) el = el.parentElement;
-            if (el) el.classList.add('active');
-            // Scroll main panel to top
-            document.querySelector('.main').scrollTop = 0;
-        }
+  <div class="card" style="margin-bottom:25px;">
+    <div class="card-title">Cyient Opportunity Scores — Parker Aerospace</div>
+    <div id="ov-opps"></div>
+  </div>
 
-        // Initialize charts
-        const divisionCtx = document.getElementById('divisionChart');
-        if (divisionCtx) {
-            new Chart(divisionCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Fire, Safety\n& Power', 'Gas Turbine\nFuel', 'Fluid\nSystems', 'Exotic\nMetals', 'Braking\nSystems', 'Flight\nControls', 'Stratoflex', 'Motion,\nPower'],
-                    datasets: [{
-                        label: 'Est. Open Positions',
-                        data: [42, 24, 28, 45, 18, 20, 12, 15],
-                        backgroundColor: '#ef4444',
-                        borderColor: '#991b1b',
-                        borderWidth: 1,
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    indexAxis: 'x',
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { font: { size: 11 } }
-                        },
-                        x: {
-                            ticks: { font: { size: 11 } }
-                        }
-                    }
-                }
-            });
-        }
+  <div class="card">
+    <div class="card-title">Why Parker Aerospace — Cyient Positioning</div>
+    <div class="grid-3" style="margin-top:12px;margin-bottom:0;">
+      <div class="warn-orange" style="margin-bottom:0;"><strong>🚀 Meggitt Synergy Window</strong><br><span style="font-size:11.5px;">$50M cost reduction target in FY2026. Engineering outsource is the fastest lever. Braking, Fire/Safety, Defense divisions all under margin pressure.</span></div>
+      <div class="warn-blue" style="margin-bottom:0;"><strong>🇮🇳 India Whitespace</strong><br><span style="font-size:11.5px;">Parker is the LAST major A&D OEM with no India ER&D center. Cyient can be Parker Aerospace India — same model as BAeHAL, BIETC, Titan.</span></div>
+      <div style="background:#f0fdf4;border:1px solid #4caf50;border-radius:8px;padding:12px 16px;font-size:12.5px;color:#166534;margin-bottom:0;"><strong>📈 Record Backlog Demand</strong><br><span style="font-size:11.5px;">$7.4B backlog = 5–7yr engineering demand. 12 divisions stretched across 43 sites. Outsourced ER&D is structurally required, not optional.</span></div>
+    </div>
+  </div>
+</div>
 
-        const locationCtx = document.getElementById('locationChart');
-        if (locationCtx) {
-            new Chart(locationCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['California\n(6 sites)', 'Midwest\n(6 sites)', 'Pacific NW\n(3 sites)', 'Texas\n(2 sites)', 'Ohio\n(4 sites)', 'Florida\n(3 sites)', 'Other US\n(9+ sites)'],
-                    datasets: [{
-                        label: 'Est. Open Positions',
-                        data: [100, 72, 45, 12, 42, 24, 35],
-                        backgroundColor: '#ef4444',
-                        borderColor: '#991b1b',
-                        borderWidth: 1,
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    indexAxis: 'x',
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { font: { size: 11 } }
-                        },
-                        x: {
-                            ticks: { font: { size: 11 } }
-                        }
-                    }
-                }
-            });
-        }
-    </script>
+<!-- ═══ DIVISIONS & LOCATIONS ═══ -->
+<div id="org" class="section">
+  <div class="section-title">🏢 Parker Aerospace Group — 12 Divisions / 43 Sites</div>
+
+  <div class="warn-orange">
+    <strong>📌 Meggitt Integration Map:</strong> 4 of the 12 divisions originated from the Meggitt acquisition (Sep 2022). These divisions (highlighted in orange) are under FY2026 synergy pressure — highest outsourcing appetite. Blue-origin divisions are legacy Parker.
+  </div>
+
+  <div class="grid-2" id="div-cards"></div>
+
+  <div class="card" style="margin-top:4px;">
+    <div class="card-title">Group Snapshot</div>
+    <div style="display:flex;gap:30px;flex-wrap:wrap;">
+      <div><span style="font-size:22px;font-weight:700;color:#002b5c;">12</span><br><span style="font-size:11px;color:#999;">Divisions</span></div>
+      <div><span style="font-size:22px;font-weight:700;color:#0075be;">43</span><br><span style="font-size:11px;color:#999;">Sites Globally</span></div>
+      <div><span style="font-size:22px;font-weight:700;color:#f47920;">4</span><br><span style="font-size:11px;color:#999;">Meggitt-Origin Divs</span></div>
+      <div><span style="font-size:22px;font-weight:700;color:#16a34a;">5</span><br><span style="font-size:11px;color:#999;">Platform Solutions</span></div>
+      <div><span style="font-size:22px;font-weight:700;color:#002b5c;">$6.2B</span><br><span style="font-size:11px;color:#999;">Aero Revenue FY2025</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CONTACTS ═══ -->
+<div id="contacts" class="section">
+  <div class="section-title">👥 Key Contacts — Parker Aerospace</div>
+  <div class="warn-blue" id="ct-note">⚠️ <strong>Verify on LinkedIn before outreach.</strong> Parker Hannifin org is organised by division and site. Entry point: Aerospace Group President (Irvine CA) → VP Operations → Division GMs/VPs by site.</div>
+  <div id="ct-exec" class="grid-2" style="margin-bottom:20px;"></div>
+  <div class="card" style="border-top-color:#f47920;">
+    <div class="card-title">TA &amp; HR Contacts — Aerospace</div>
+    <div id="ct-ta"></div>
+  </div>
+</div>
+
+<!-- ═══ SALES ACTIONS ═══ -->
+<div id="actions" class="section">
+  <div class="section-title">🎯 Sales Actions — Parker Aerospace Priority Plays</div>
+  <div id="sa-plays"></div>
+</div>
+
+<!-- ═══ PLATFORM SOLUTIONS ═══ -->
+<div id="platforms" class="section">
+  <div class="section-title">⚙️ Parker Aerospace — 5 Platform Solutions</div>
+  <div class="warn-blue">
+    🔧 <strong>These 5 platform categories map across all 12 aerospace divisions.</strong> Each platform solution = a distinct ER&D entry point for Cyient. Use the "Cyient Angle" in every division conversation.
+  </div>
+  <div id="pl-cards"></div>
+</div>
+
+<!-- ═══ SIGNAL CHAINS ═══ -->
+<div id="signals" class="section">
+  <div class="section-title">📡 Signal Chains — 5 Live Market Signals</div>
+  <div style="font-size:12.5px;color:#666;margin-bottom:22px;line-height:1.6;">Each chain = a live market signal → Parker's response → specific ER&D gap → Cyient entry. Use the signal in outreach — it proves you track their business cycle.</div>
+  <div id="sig-chains"></div>
+</div>
+
+<!-- ═══ FAST-SELL SKILLS ═══ -->
+<div id="skills" class="section">
+  <div class="section-title">⚡ Fast-Sell Skills — Lead with These</div>
+  <div class="grid-2" id="fs-cards"></div>
+</div>
+
+<!-- ═══ HIRING INTELLIGENCE ═══ -->
+<div id="hiring" class="section">
+  <div class="section-title">💼 Hiring Intelligence — Parker Aerospace</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Active Open Roles</div>
+      <div class="kpi" id="hr-roles">—</div>
+      <div class="kpi-label">Total Parker Hannifin (Mar 2026)</div>
+    </div>
+    <div class="card" style="border-top-color:#f47920;">
+      <div class="card-title">Hot Division Roles</div>
+      <div id="hr-hot"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Active Role Categories — Aerospace Focus</div>
+    <div id="hr-cats"></div>
+  </div>
+  <div class="warn-blue" style="margin-top:20px;">
+    💡 <strong>Hiring signal = outsource signal.</strong> When Parker is posting aerospace engineering roles actively, it means their divisions are capacity-constrained. Use LinkedIn job postings as real-time demand intelligence — filter by "Parker Hannifin" + "aerospace" + location (Ogden UT / Mentor OH / Akron OH / Irvine CA / Simi Valley CA).
+  </div>
+</div>
+
+<!-- ═══ OUTREACH PLAYBOOK ═══ -->
+<div id="outreach" class="section">
+  <div class="section-title">🤝 Outreach Playbook — <span id="op-headline"></span></div>
+  <div id="op-badge" style="display:inline-block;background:#4caf50;color:#fff;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:22px;"></div>
+  <div id="op-triggers" class="grid-2" style="margin-bottom:28px;"></div>
+  <div class="card" style="border-top-color:#002b5c;">
+    <div class="card-title">Cold → Warm: 5-Step Sequence</div>
+    <div id="op-steps"></div>
+  </div>
+</div>
+
+<!-- ═══ PARTNERSHIPS ═══ -->
+<div id="partnerships" class="section">
+  <div class="section-title">🤝 Partnerships &amp; Alliances — Parker Ecosystem</div>
+  <div id="pw-cards" class="grid-2"></div>
+</div>
+
+<!-- ═══ EVENTS ═══ -->
+<div id="events" class="section">
+  <div class="section-title">📅 Industry Events — 2026 Calendar</div>
+  <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:12px 16px;margin-bottom:22px;font-size:12.5px;color:#92400e;">
+    🗓️ <strong>Why events matter:</strong> Parker division leadership attends these shows. Pre-event outreach (2 weeks before) converts cold emails into scheduled meetings. Motion Power & Sensing and Braking Systems UK teams dominate Farnborough — plan UK travel for July 2026.
+  </div>
+  <div id="ev-cards" class="grid-2"></div>
+</div>
+
+<!-- ═══ INDIA STRATEGY ═══ -->
+<div id="india" class="section">
+  <div class="section-title">🇮🇳 India Strategy — Parker's Biggest Whitespace</div>
+  <div class="warn-orange" id="in-gap"></div>
+  <div class="grid-2">
+    <div class="card" style="border-top-color:#f47920;">
+      <div class="card-title">Parker India Today</div>
+      <p id="in-presence" style="font-size:12.5px;line-height:1.7;color:#444;"></p>
+    </div>
+    <div class="card" style="border-top-color:#16a34a;">
+      <div class="card-title">Cyient India Advantage</div>
+      <ul id="in-advantage" style="list-style:none;padding:0;"></ul>
+    </div>
+  </div>
+  <div class="card" style="border-top-color:#0075be;">
+    <div class="card-title">Pitch Framing</div>
+    <p id="in-pitch" style="font-size:13px;font-weight:600;color:#002b5c;line-height:1.7;margin-bottom:16px;"></p>
+    <div class="card-title">Target Contacts for India Pitch</div>
+    <div id="in-targets"></div>
+  </div>
+</div>
+
+<!-- ═══ COMPETITIVE INTEL ═══ -->
+<div id="competitive" class="section">
+  <div class="section-title">⚔️ Competitive Intel — ER&D Vendor Landscape</div>
+  <div class="warn-blue">⚠️ <strong>Verify before assuming competitive landscape is static.</strong> Intelligence is sourced from public data as of Apr 2026. Ask your Parker contacts directly: "Who else are you working with for engineering support?"</div>
+  <div id="comp-cards" class="grid-2"></div>
+</div>
+
+</div><!-- /main-content -->
+</div><!-- /container -->
+
+<script>
+function switchSection(event, id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (event && event.currentTarget) event.currentTarget.classList.add('active');
+}
+
+function initDashboard() {
+  const d = PA_DATA;
+
+  // ── Topbar / banner ───────────────────────────────────────────────────
+  document.getElementById('sb-refresh').textContent = d.lastRefreshed;
+  document.getElementById('tb-backlog').textContent = '$' + d.aeroBacklog + 'B Backlog';
+  document.getElementById('tb-rev').textContent     = '$' + d.aeroRevenue + 'B Aero Revenue';
+  document.getElementById('banner-refresh').textContent = 'Data: ' + d.lastRefreshed;
+
+  // ── Overview KPIs ──────────────────────────────────────────────────────
+  document.getElementById('ov-arev').textContent    = '$' + d.aeroRevenue + 'B';
+  document.getElementById('ov-agrow').textContent   = '↑ ' + d.aeroGrowth + '% organic YoY';
+  document.getElementById('ov-backlog').textContent = '$' + d.aeroBacklog + 'B';
+  document.getElementById('ov-margin').textContent  = d.aeroMargin + '%';
+  document.getElementById('ov-roles').textContent   = d.openRoles.toLocaleString();
+  document.getElementById('ov-meggitt').textContent = d.meggittSynergy;
+  document.getElementById('ov-guidance').textContent = d.fy26Guidance;
+
+  document.getElementById('ov-opps').innerHTML = d.opportunities.map(o => `
+    <div class="prog-row">
+      <div class="prog-label"><span>${o.label}</span><span style="color:#002b5c;font-weight:700;">${o.score}</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${o.score}%;background:${o.score>85?'#002b5c':o.score>75?'#0075be':'#f47920'};"></div></div>
+    </div>`).join('');
+
+  // ── Divisions ─────────────────────────────────────────────────────────
+  document.getElementById('div-cards').innerHTML = d.aeroGroup.divisions.map(div => `
+    <div class="div-card ${div.meggitt?'meggitt':''}">
+      <div class="div-name">${div.name}
+        ${div.meggitt ? '<span class="div-badge" style="background:#fff3e0;color:#e65100;">🆕 Meggitt</span>' : '<span class="div-badge" style="background:#e3f2fd;color:#1565c0;">Parker Legacy</span>'}
+      </div>
+      <div class="div-locations">📍 ${div.sites.join(' · ')}</div>
+      <div style="font-size:11.5px;color:#555;line-height:1.6;">${div.focus}</div>
+    </div>`).join('');
+
+  // ── Contacts ──────────────────────────────────────────────────────────
+  const leaders = [d.leadership.ceo, d.leadership.cfo, d.leadership.aeroPresident, d.leadership.vpOps, d.leadership.vpSC, d.leadership.vpAftermarket];
+  document.getElementById('ct-exec').innerHTML = leaders.map(l => `
+    <div class="contact-card">
+      <div class="contact-name">${l.name}</div>
+      <div class="contact-title">${l.title}</div>
+      <div class="contact-location">📍 ${l.location} &nbsp;·&nbsp; Since ${l.since}</div>
+    </div>`).join('');
+
+  document.getElementById('ct-ta').innerHTML = d.hiring.taContacts.map(t => `
+    <div class="contact-card" style="border-left-color:#f47920;">
+      <div class="contact-name">${t.name}</div>
+      <div class="contact-title">${t.title}</div>
+      <div class="contact-location">📍 ${t.location}</div>
+      <div style="font-size:10.5px;color:#0075be;margin-top:4px;">🔗 ${t.li}</div>
+    </div>`).join('');
+
+  // ── Platforms ─────────────────────────────────────────────────────────
+  document.getElementById('pl-cards').innerHTML = d.platforms.map(p => `
+    <div class="platform-card">
+      <div class="platform-header" style="background:${p.color};">
+        <div style="font-size:16px;font-weight:700;">${p.icon} ${p.name}</div>
+      </div>
+      <div class="platform-products">
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">
+          ${p.products.map(pr => `<span class="tag tag-blue">${pr}</span>`).join('')}
+        </div>
+        <div style="background:#f0fdf4;border-left:3px solid #22c55e;padding:8px 12px;border-radius:0 6px 6px 0;font-size:11.5px;color:#166534;font-weight:600;">🎯 Cyient Angle: ${p.cyient}</div>
+      </div>
+    </div>`).join('');
+
+  // ── Signal Chains ─────────────────────────────────────────────────────
+  document.getElementById('sig-chains').innerHTML = d.signals.map(s => `
+    <div class="chain" style="margin-bottom:14px;border-radius:10px;overflow:hidden;background:white;box-shadow:0 1px 3px rgba(0,0,0,.08);">
+      <div class="chain-num" style="background:${s.color};">${s.num}</div>
+      <div class="chain-body">
+        <div class="chain-cell" style="background:#f8faff;">
+          <div class="chain-label" style="color:#666;">📡 Signal</div>
+          <div class="chain-head">${s.signal}</div>
+        </div>
+        <div class="chain-cell" style="background:#fafff8;">
+          <div class="chain-label" style="color:#666;">↩ Response</div>
+          <div class="chain-body-text">${s.response}</div>
+        </div>
+        <div class="chain-cell" style="background:#fff8f8;">
+          <div class="chain-label" style="color:#666;">🎯 ER&amp;D Gap</div>
+          <div class="chain-body-text">${s.gap}</div>
+        </div>
+        <div class="chain-cell" style="background:#f0fdf4;">
+          <div class="chain-label" style="color:#166534;">⚡ Entry</div>
+          <div class="chain-body-text" style="color:#166534;font-weight:600;">${s.entry}</div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  // ── Fast-Sell Skills ──────────────────────────────────────────────────
+  document.getElementById('fs-cards').innerHTML = d.fastSell.map(f => `
+    <div class="card" style="border-top-color:#f47920;">
+      <div class="card-title">${f.title}</div>
+      <p style="font-size:12.5px;line-height:1.7;color:#444;">${f.relevance}</p>
+    </div>`).join('');
+
+  // ── Hiring ────────────────────────────────────────────────────────────
+  document.getElementById('hr-roles').textContent = d.hiring.openRoles.toLocaleString();
+  document.getElementById('hr-hot').innerHTML = d.hiring.hotDivisions.map(h => `
+    <div style="padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:11.5px;">
+      <strong>${h.div}</strong> · ${h.loc}<br><span style="color:#666;">${h.why}</span>
+    </div>`).join('');
+  document.getElementById('hr-cats').innerHTML = d.hiring.aeroFocus.map(r => `
+    <span class="tag tag-blue" style="margin-bottom:8px;">${r}</span>`).join('');
+
+  // ── Outreach Playbook ─────────────────────────────────────────────────
+  const op = d.outreachPlaybook;
+  document.getElementById('op-headline').textContent = op.headline;
+  document.getElementById('op-badge').textContent    = op.badge;
+  document.getElementById('op-triggers').innerHTML   = op.triggers.map(t => `
+    <div class="card" style="border-top-color:#7c3aed;">
+      <div class="card-title">${t.icon} ${t.label}</div>
+      <p style="font-size:12.5px;line-height:1.7;color:#444;margin-bottom:10px;">${t.body}</p>
+      <div style="background:#f0fdf4;border-left:3px solid #22c55e;padding:8px 12px;border-radius:0 6px 6px 0;font-size:11.5px;color:#166534;font-weight:600;">⚡ Action: ${t.action}</div>
+    </div>`).join('');
+  document.getElementById('op-steps').innerHTML = op.coldToWarm.map(s => `
+    <div style="display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #f0f0f0;">
+      <div style="min-width:28px;height:28px;background:#7c3aed;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">${s.step}</div>
+      <div><div style="font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:4px;">${s.label}</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">${s.body}</div></div>
+    </div>`).join('');
+
+  // ── Partnerships ──────────────────────────────────────────────────────
+  document.getElementById('pw-cards').innerHTML = d.partnerships.map(p => `
+    <div class="card" style="border-top-color:#0284c7;">
+      <div class="card-title">${p.name} <span class="tag">${p.type}</span> <span class="tag" style="background:#dcfce7;color:#166534;">${p.status}</span></div>
+      <p style="font-size:12.5px;line-height:1.7;color:#444;margin-bottom:10px;">${p.desc}</p>
+      <div style="background:#eff6ff;border-left:3px solid #0284c7;padding:8px 12px;border-radius:0 6px 6px 0;font-size:11.5px;color:#1e40af;font-weight:600;">🎯 Cyient Angle: ${p.angle}</div>
+    </div>`).join('');
+
+  // ── Events ────────────────────────────────────────────────────────────
+  document.getElementById('ev-cards').innerHTML = d.events.map(e => `
+    <div class="card" style="border-top-color:#d97706;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div class="card-title" style="margin-bottom:0;">${e.name}</div>
+        <span style="font-size:12px;font-weight:700;">${e.priority}</span>
+      </div>
+      <div style="font-size:12px;color:#666;margin-bottom:6px;">📍 ${e.location} &nbsp;·&nbsp; 📅 ${e.date} &nbsp;·&nbsp; <span class="tag">${e.type}</span></div>
+      <p style="font-size:12.5px;line-height:1.7;color:#444;">${e.why}</p>
+    </div>`).join('');
+
+  // ── India ─────────────────────────────────────────────────────────────
+  const ind = d.india;
+  document.getElementById('in-gap').innerHTML = `🚨 <strong>Parker India Gap:</strong> ${ind.gap}`;
+  document.getElementById('in-presence').textContent = ind.parkerPresence;
+  document.getElementById('in-advantage').innerHTML = ind.cyientAdvantage.map(a => `
+    <li style="padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px;color:#166534;">✅ ${a}</li>`).join('');
+  document.getElementById('in-pitch').textContent = ind.pitch;
+  document.getElementById('in-targets').innerHTML = ind.targets.map(t => `
+    <div style="padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:12px;">
+      <strong>${t.role}</strong><br><span style="color:#555;">${t.angle}</span>
+    </div>`).join('');
+
+  // ── Sales Plays ───────────────────────────────────────────────────────
+  document.getElementById('sa-plays').innerHTML = d.salesPlays.map(p => `
+    <div class="platform-card">
+      <div class="platform-header" style="background:${p.color};">
+        <div style="font-size:15px;font-weight:700;">${p.icon} ${p.title}</div>
+        <div style="font-size:11px;opacity:.9;">${p.targetLine}</div>
+      </div>
+      <div class="platform-products">
+        <div style="font-size:12.5px;line-height:1.7;color:#444;margin-bottom:12px;">${p.body}</div>
+        <div class="${p.actionColor}" style="margin-bottom:10px;"><strong>⚡ Action:</strong> ${p.action}</div>
+      </div>
+    </div>`).join('');
+
+  // ── Competitive Intel ─────────────────────────────────────────────────
+  document.getElementById('comp-cards').innerHTML = d.competitors.map(c => `
+    <div class="card" style="border-top-color:${c.threat==='Medium'?'#f59e0b':c.threat==='High'?'#ef4444':'#6b7280'};">
+      <div class="card-title">${c.name} <span class="tag" style="background:${c.threat==='Medium'?'#fff3e0':c.threat==='High'?'#fdecea':'#f0f0f0'};color:${c.threat==='Medium'?'#e65100':c.threat==='High'?'#c62828':'#555'};">⚠ ${c.threat} Threat</span></div>
+      <p style="font-size:12px;color:#666;margin-bottom:6px;">${c.presence}</p>
+      <p style="font-size:12.5px;line-height:1.7;color:#444;">${c.note}</p>
+    </div>`).join('');
+}
+
+document.addEventListener('DOMContentLoaded', initDashboard);
+
+// helper
+function prog_row(l, s) {
+  return `<div class="prog-row"><div class="prog-label"><span>${l}</span><span>${s}</span></div><div class="prog-bar"><div class="prog-fill" style="width:${s}%"></div></div></div>`;
+}
+</script>
+<!-- add prog-row helper CSS -->
+<style>
+.prog-row{margin-bottom:12px;}
+.prog-label{display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:#666;margin-bottom:5px;}
+.prog-bar{width:100%;height:8px;background:#e0e0e0;border-radius:4px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:4px;}
+</style>
 </body>
 </html>
